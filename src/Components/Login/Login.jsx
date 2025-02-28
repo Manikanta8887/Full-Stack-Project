@@ -4,7 +4,7 @@ import { Input, Button } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone, SyncOutlined } from "@ant-design/icons";
 import { signInWithEmailAndPassword, signInWithPopup, signInAnonymously } from "firebase/auth";
 import { Auth, GoogleProvider } from "../Firebase/Firebaseconfig";
-import Logo from "../../assets/Logo.png"; 
+import Logo from "../../assets/logo.png"; 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./Login.css";
