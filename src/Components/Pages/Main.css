@@ -1,0 +1,235 @@
+.live-streaming-layout {
+    min-height: 100vh;
+  }
+
+  .custom-sider {
+    background-color: #2E073F !important;
+  }
+  
+  .custom-footer {
+    text-align: center;
+    background-color: #2E073F;
+    color: #EBD3F8;
+    padding: 20px 0;
+  }
+  
+  .demo-logo-vertical {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+  }
+  
+  .logo-img {
+    height: 40px;
+    width: 35px;
+    margin-right: 8px;
+  }
+  
+  .logo-text {
+    color: #AD49E1; 
+    margin: 0;
+  }
+  
+  
+  .recommended-section {
+    padding: 16px;
+    color: #EBD3F8;
+  }
+  
+  .recommended-title {
+    color: #AD49E1;
+  }
+
+.custom-header {
+    background-color: #a34ccf;  
+    padding: 0 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .header-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .header-row {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-left,
+    .header-center,
+    .header-right {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .header-left,
+    .header-right {
+      display: flex;
+      justify-content: center;
+    }
+    .search-input {
+      max-width: 90%;
+    }
+  }
+  
+  
+  .toggle-btn {
+    color: #EBD3F8 !important;
+    background-color: white;
+  }
+
+  .header-icon {
+    color: white !important; /* Change this to your desired color */
+  }
+  
+  
+  .search-col {
+    padding: 0 16px;
+  }
+  
+  .search-input {
+    max-width: 600px;
+    width: 100%;
+  }
+  
+  .custom-content {
+    margin: 24px 16px;
+    background-color: #f0f2f5;
+    padding: 24px;
+    min-height: 280px;
+    border-radius: 4px;
+  }
+  
+  .categories-section {
+    margin-bottom: 24px;
+  }
+  
+  .category-button {
+    margin-bottom: 8px;
+  }
+  
+  .featured-streams-section {
+    margin-bottom: 24px;
+  }
+  
+  .card-cover {
+    position: relative;
+    padding-top: 56.25%;
+    background-color: #7A1CAC;
+  }
+  
+  .live-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #f5222d;
+    color: white;
+  }
+  
+  .viewers-tag {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+  }
+  
+  .stream-card {
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
+  }
+  
+  .category-tag {
+    background-color: #AD49E1;
+    color: white;
+    border: none;
+  }
+  
+  .ant-btn-primary {
+    background-color: #AD49E1 !important;
+    border-color: #AD49E1 !important;
+    color: #ffffff !important;
+  }
+  
+  .ant-btn-primary:hover,
+  .ant-btn-primary:focus {
+    background-color: #7A1CAC !important;
+    border-color: #7A1CAC !important;
+    color: #ffffff !important;
+  }
+  
+
+  .ant-btn-primary[ghost] {
+    color: #AD49E1 !important;
+    border-color: #AD49E1 !important;
+    background-color: transparent !important;
+  }
+  
+  .ant-btn-primary[ghost]:hover,
+  .ant-btn-primary[ghost]:focus {
+    color: #ffffff !important;
+    background-color: #AD49E1 !important;
+    border-color: #AD49E1 !important;
+  }
+  
+  .ant-btn-text {
+    color: #AD49E1 !important;
+  }
+  
+  .ant-btn-text:hover,
+  .ant-btn-text:focus {
+    color: #7A1CAC !important;
+  }
+  
+  .ant-input:focus,
+  .ant-input-focused {
+    border-color: #AD49E1 !important;
+    box-shadow: 0 0 0 2px rgba(173, 73, 225, 0.2) !important; 
+  }
+  
+  .ant-input-search-button:hover,
+  .ant-input-search-button:focus {
+    background-color: #7A1CAC !important;
+    border-color: #7A1CAC !important;
+  }
+  
+  @media (max-width: 768px) {
+    .search-col {
+      padding: 0;
+      margin-top: 8px;
+    }
+    .custom-header {
+      height: auto;
+      padding: 8px;
+    }
+    .custom-content {
+      margin: 16px;
+      padding: 16px;
+    }
+  }
+
+  /* Override the active (selected) menu item background color */
+.custom-sider .ant-menu-dark .ant-menu-item-selected {
+    background-color: #AD49E1 !important;
+  }
+  
+  /* Optionally, set the active menu item text color to white */
+  .custom-sider .ant-menu-dark .ant-menu-item-selected > .ant-menu-title-content {
+    color: #ffffff !important;
+  }
+  
+  /* Optionally, change hover background color for menu items */
+  .custom-sider .ant-menu-dark .ant-menu-item:hover {
+    background-color: #7A1CAC !important;
+  }
+  
+  

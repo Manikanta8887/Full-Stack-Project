@@ -1,0 +1,80 @@
+/* .app-layout {
+  min-height: 100vh;
+  background-color: #2E073F;
+  color: white;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #7A1CAC !important;
+  padding: 0 20px;
+}
+
+.logo {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.menu {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.hero-section {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.search-bar {
+  width: 50%;
+  margin-top: 15px;
+}
+
+.featured-streams {
+  padding: 20px;
+}
+
+.stream-card {
+  background: #AD49E1 !important;
+  color: white !important;
+  text-align: center;
+  padding: 20px;
+}
+
+.play-icon {
+  font-size: 30px;
+  color: #EBD3F8;
+}
+
+.footer {
+  text-align: center;
+  padding: 10px;
+  background: #7A1CAC;
+} */
+
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.loading-spinner {
+  width: 80px;
+  height: 80px;
+  animation: spin 1s linear infinite;
+}

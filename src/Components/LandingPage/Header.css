@@ -1,0 +1,54 @@
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2E073F;
+  padding: 10px 20px;
+  height: 64px;
+  color: white;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.logo-text {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #EBD3F8;
+}
+
+.login-button {
+  color: white;
+  border: 1px solid #EBD3F8;
+  background: transparent;
+  transition: all 0.3s ease-in-out;
+}
+
+.login-button:hover {
+  background: #AD49E1; 
+  border-color: #AD49E1;
+  color: #ffffff;
+}
+
+.signup-button {
+  background: #7A1CAC !important;  
+  border: 1px solid #7A1CAC !important;
+  color: #ffffff !important;
+  transition: all 0.3s ease-in-out;
+}
+
+.signup-button:hover, 
+.signup-button:focus, 
+.signup-button:active {
+  background: #AD49E1 !important; 
+  border-color: #AD49E1 !important;
+  color: #ffffff !important;
+}

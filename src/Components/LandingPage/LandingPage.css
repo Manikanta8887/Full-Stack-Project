@@ -1,0 +1,155 @@
+.landing-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 82vh;
+  background: linear-gradient(135deg, #2E073F, #7A1CAC);
+  text-align: center;
+  color: #EBD3F8;
+  padding: 20px;
+}
+
+.landing-container1 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-container img {
+  flex: 1;
+  max-width: 100%;
+  height: auto;
+  animation: faderight 2s ease-in-out;
+}
+
+@keyframes faderight {
+  0% {
+    transform: translateX(100px);
+  }
+
+  100% {
+    transform: translateX(0px);
+  }
+}
+
+.landing-title {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #EBD3F8;
+  margin-bottom: 10px;
+  animation: fadeup 2s ease-in-out forwards;
+}
+
+@keyframes fadeup {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+.landing-description {
+  font-size: 1.5rem;
+  max-width: 600px;
+  color: #EBD3F8;
+  opacity: 0.9;
+  opacity: 0;
+  animation: fadeup 3s ease-out forwards 2s;
+}
+
+.button-container {
+  display: flex;
+  margin-top: 20px;
+  opacity: 0;
+  animation: fadeup 3s ease-out forwards 2s;
+}
+
+.explore-button {
+  background-color: #AD49E1 !important;
+  border: none;
+  color: white;
+  margin-right: 10px;
+}
+
+.explore-button:hover {
+  background-color: #EBD3F8 !important;
+  color: #2E073F !important;
+}
+
+.about-section {
+  padding: 50px;
+  background-color: #2E073F;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 86vh;
+  gap: 50px;
+}
+
+.about-section img {
+  flex: 1;
+  max-width: 40%;
+  height: 80%;
+  border-radius: 20px;
+}
+
+.about-child {
+  padding: 50px;
+  color: #EBD3F8;
+  text-align: center;
+}
+
+.about-child h2 {
+  font-size: 2rem;
+  color: #AD49E1;
+}
+
+.about-child p {
+  font-size: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.stream-button {
+  background-color: transparent !important;
+  border: 2px solid #AD49E1;
+  color: #EBD3F8;
+}
+
+.stream-button:hover {
+  background-color: #AD49E1 !important;
+  color: white !important;
+}
+
+@media (max-width: 768px) {
+  .landing-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .landing-container img {
+    width: 80%;
+    margin-top: 20px;
+  }
+
+  .landing-title {
+    font-size: 2rem;
+  }
+
+  .landing-description {
+    font-size: 1rem;
+    max-width: 90%;
+  }
+
+  .about-section {
+    flex-direction: column;
+    height: auto;
+  }
+}

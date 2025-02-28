@@ -1,0 +1,114 @@
+.signup-container {
+    background: linear-gradient(to right, #2E073F, #7A1CAC);
+    min-height: 98vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .signup-card {
+    background: #EBD3F8;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    position: relative;
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #AD49E1;
+    transition: 0.3s ease-in-out;
+  }
+  
+  .close-btn:hover {
+    color: #7A1CAC;
+    transform: scale(1.2);
+  }
+  
+  .logo-container {
+    margin-bottom: 15px;
+  }
+  
+  .logo-img1 {
+    text-align: center;
+    max-width: 200px;
+    height: auto;
+    margin: auto;
+  }
+  
+  .signup-title {
+    font-weight: bold;
+    color: #2E073F;
+    margin-bottom: 20px;
+  }
+  
+  .form-item {
+    text-align: left;
+  }
+  
+  .form-item label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #7A1CAC;
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .form-item .ant-input,
+  .form-item .ant-input-password {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #AD49E1;
+    transition: 0.3s ease-in-out;
+  }
+  
+  .form-item .ant-input:focus,
+  .form-item .ant-input-password:focus {
+    border-color: #7A1CAC;
+    box-shadow: 0px 0px 8px rgba(173, 73, 225, 0.5);
+  }
+  
+  .signup-btn {
+    font-size: 18px;
+    width: 100%;
+    background: #AD49E1;
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease-in-out;
+    border: none;
+    margin-top: 15px;
+  }
+  
+  .signup-btn:hover {
+    background: #7A1CAC;
+  }
+  
+  .redirect-text {
+    margin-top: 15px;
+    font-size: 25px;
+  }
+  
+  .redirect-link {
+    color: #7A1CAC;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  
+  .redirect-link:hover {
+    color: #AD49E1;
+  }
+  
+  @media (max-width: 480px) {
+    .signup-card {
+      padding: 20px;
+      width: 90%;
+    }
+  }
+  
