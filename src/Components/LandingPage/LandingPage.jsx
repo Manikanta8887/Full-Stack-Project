@@ -3,7 +3,7 @@ import { Button } from "antd";
 import "./LandingPage.css";
 import Header from "./Header";
 import { Link } from "react-router-dom"
-import Landimage1 from "../../assets/Landimage.svg"
+import Landimage1 from "../../assets/landimage.svg"
 import Landimage from "../../assets/land2.avif"
 
 
