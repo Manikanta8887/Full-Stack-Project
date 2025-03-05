@@ -1,31 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { Layout, Menu, Input, Button, Avatar, Badge, Row, Col, Typography, Space } from 'antd';
 import {
-  Layout,
-  Menu,
-  Input,
-  Button,
-  Card,
-  Avatar,
-  Badge,
-  Tag,
-  Row,
-  Col,
-  Typography,
-  Space,
-} from 'antd';
-import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  HomeOutlined,
-  VideoCameraOutlined,
-  UserOutlined,
-  BellOutlined,
-  FireOutlined,
-  GiftOutlined,
-  MessageOutlined,
+  MenuFoldOutlined, MenuUnfoldOutlined, HomeOutlined, VideoCameraOutlined,
+  UserOutlined, BellOutlined, FireOutlined,
+
 } from '@ant-design/icons';
 import Logo from '../../assets/logo1.png';
 import './Main.css';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Title } = Typography;
@@ -33,6 +15,19 @@ const { Search } = Input;
 
 const LiveStreamingPlatform = () => {
   const [collapsed, setCollapsed] = useState(window.innerWidth < 768);
+  const [selectedkey, setSelectedkey] = useState("/livestreamingplatform");
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setSelectedkey(location.pathname);
+  }, [location.pathname]);
+
+  const handlemenuClick = ({ key }) => {
+    setSelectedkey(key);
+    navigate(key);
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -44,14 +39,13 @@ const LiveStreamingPlatform = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [collapsed]);
 
-  const featuredStreams = [
-    { id: 1, title: "Gaming Championship", streamer: "ProGamer", viewers: 15420, category: "Gaming" },
-    { id: 2, title: "Cooking Show Live", streamer: "ChefMaster", viewers: 8750, category: "Cooking" },
-    { id: 3, title: "Music Concert", streamer: "MusicArtist", viewers: 12300, category: "Music" },
-  ];
-
-  const categories = [
-    "Gaming", "Music", "Sports", "Creative", "IRL", "Esports", "Education", "Entertainment"
+  const channels = [
+    { id: 'channel1', name: 'Channel 1' },
+    { id: 'channel2', name: 'Channel 2' },
+    { id: 'channel3', name: 'Channel 3' },
+    { id: 'channel4', name: 'Channel 4' },
+    { id: 'channel5', name: 'Channel 5' },
+    { id: 'channel6', name: 'Channel 6' },
   ];
 
   return (
@@ -74,22 +68,28 @@ const LiveStreamingPlatform = () => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['1']}
+          selectedKeys={[selectedkey]}
+          onClick={handlemenuClick}
           items={[
             {
-              key: '1',
+              key: '/livestreamingplatform',
               icon: <HomeOutlined />,
               label: 'Browse',
             },
             {
-              key: '2',
+              key: '/livestreamingplatform/stream/:id',
               icon: <VideoCameraOutlined />,
               label: 'Start Streaming',
             },
             {
-              key: '3',
+              key: '/livestreamingplatform/following',
               icon: <FireOutlined />,
               label: 'Following',
+            },
+            {
+              key: '/livestreamingplatform/profile',
+              icon: <UserOutlined />,
+              label: 'Profile',
             },
           ]}
         />
@@ -100,19 +100,19 @@ const LiveStreamingPlatform = () => {
             <Menu
               theme="dark"
               mode="inline"
-              items={[
-                {
-                  key: 'channel1',
-                  icon: <Avatar size="small" icon={<UserOutlined />} style={{ color: 'white' }} />,
-                  label: 'Channel 1',
-                },
-                {
-                  key: 'channel2',
-                  icon: <Avatar size="small" icon={<UserOutlined />} style={{ color: 'white' }} />,
-                  label: 'Channel 2',
-                },
-              ]}
-            />
+              selectedKeys={[selectedkey]}
+              onClick={handlemenuClick}
+            >
+              {channels.map((channel) => (
+                <Menu.Item
+                  key={`/livestreamingplatform/channel/${channel.id}`}
+                  icon={<Avatar size="small" icon={<UserOutlined />} style={{ color: 'white' }} />}
+                >
+                  {channel.name}
+                </Menu.Item>
+              ))}
+            </Menu>
+
           </div>
         )}
       </Sider>
@@ -143,8 +143,6 @@ const LiveStreamingPlatform = () => {
                 <Badge count={5}>
                   <BellOutlined style={{ fontSize: '20px' }} />
                 </Badge>
-                <MessageOutlined style={{ fontSize: '20px' }} />
-                <GiftOutlined style={{ fontSize: '20px' }} />
                 <Avatar icon={<UserOutlined />} />
               </Space>
             </Col>
@@ -152,53 +150,7 @@ const LiveStreamingPlatform = () => {
         </Header>
 
         <Content className="custom-content">
-          <div className="categories-section">
-            <Title level={4}>Categories</Title>
-            <Space wrap>
-              {categories.map(category => (
-                <Button key={category} type="primary" ghost className="category-button">
-                  {category}
-                </Button>
-              ))}
-            </Space>
-          </div>
-
-          <div className="featured-streams-section">
-            <Title level={4}>Featured Streams</Title>
-            <Row gutter={[16, 16]}>
-              {featuredStreams.map(stream => (
-                <Col xs={24} sm={12} lg={8} key={stream.id}>
-                  <Card
-                    hoverable
-                    className="stream-card"
-                    cover={
-                      <div className="card-cover">
-                        <Badge count="LIVE" className="live-badge" />
-                        <Tag className="viewers-tag">
-                          {stream.viewers.toLocaleString()} viewers
-                        </Tag>
-                      </div>
-                    }
-                  >
-                    <Card.Meta
-                      avatar={<Avatar icon={<UserOutlined />} />}
-                      title={stream.title}
-                      description={
-                        <>
-                          <div>{stream.streamer}</div>
-                          <Tag className="category-tag">{stream.category}</Tag>
-                        </>
-                      }
-                    />
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </div>
-
-          <div className="recommended-streams-section">
-            <Title level={4}>Recommended Streams</Title>
-          </div>
+          <Outlet />
         </Content>
 
         <Footer className="custom-footer">

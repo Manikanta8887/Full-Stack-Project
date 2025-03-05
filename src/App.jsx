@@ -1,40 +1,61 @@
-import { Route, Routes, useLocation } from 'react-router-dom'
-import LiveStreamingPlatform from './Components/Pages/Main'
-import LandingPage from './Components/LandingPage/LandingPage'
-import Home from './Components/Pages/Home'
-import Loginpage from './Components/Login/Login'
-import PageNotFound from './Components/Pages/PageNotFound'
-import './App.css'
-import Signup from './Components/Login/Signup'
-import Spin from "./assets/spinloading.svg"
-import { useEffect, useState } from 'react'
+import { Route, Routes, useLocation } from 'react-router-dom';
+import LiveStreamingPlatform from './Components/Pages/Main';
+import LandingPage from './Components/LandingPage/LandingPage';
+import Loginpage from './Components/Login/Login';
+import PageNotFound from './Components/Login/PageNotFound';
+import './App.css';
+import Signup from './Components/Login/Signup';
+import Spin from "./assets/spinloading.svg";
+import { useEffect, useRef, useState, useMemo } from 'react';
+import Stream from './Components/Pages/Stream';
+import StreamingContent from './Components/Pages/Content';
+import Profile from './Components/Pages/Profile';
+import ChannelPage from './Components/Pages/Channel';
+import ProfilePage from './Components/Pages/Profile';
 
 function App() {
+  const location = useLocation(); 
+  const [loading, setLoading] = useState(false); 
+  const prevBaseRoute = useRef(""); 
 
-  const location = useLocation();
-  const [loading, setLoading] = useState(true)
-  useEffect(() => { 
-    setLoading(true)
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [location.pathname])
+  const currentBaseRoute = useMemo(() => {
+    return location.pathname.split('/')[1] || '/';
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (prevBaseRoute.current && prevBaseRoute.current !== currentBaseRoute) {
+      setLoading(true);
+      const timer = setTimeout(() => {
+        setLoading(false); 
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+
+    prevBaseRoute.current = currentBaseRoute;
+  }, [currentBaseRoute]);
 
   return (
     <>
-      {loading ? (<img src={Spin} alt="image" className='loading-container' />) : (
+      {loading ? (
+        <img src={Spin} alt="Loading..." className='loading-container' />
+      ) : (
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Loginpage />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/livestreamingplatform" element={<LiveStreamingPlatform />} />
+
+          <Route path="/livestreamingplatform" element={<LiveStreamingPlatform />}>
+            <Route index element={<StreamingContent />} />
+            <Route path="stream/:id" element={<Stream />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="channel/:id" element={<ChannelPage />} />
+          </Route>
+
           <Route path="/*" element={<PageNotFound />} />
-        </Routes>)
-      }
+        </Routes>
+      )}
     </>
-  )
+  );
 }
 
-export default App
+export default App;
