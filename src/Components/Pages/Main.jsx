@@ -46,6 +46,7 @@ const LiveStreamingPlatform = () => {
     { id: 'channel4', name: 'Channel 4' },
     { id: 'channel5', name: 'Channel 5' },
     { id: 'channel6', name: 'Channel 6' },
+    { id: 'channel7', name: 'Channel 7' },
   ];
 
   return (
