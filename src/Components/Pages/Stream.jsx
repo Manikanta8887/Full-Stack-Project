@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 
-const socket = io("http://localhost:5000"); // Connect to the signaling server
+const socket = io("https://touchlive-backend.onrender.com"); // Connect to the signaling server
 
 const Stream = () => {
     const localVideoRef = useRef(null); // Video of the user
