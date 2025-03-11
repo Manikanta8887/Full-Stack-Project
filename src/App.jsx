@@ -8,7 +8,7 @@ import Signup from './Components/Login/Signup';
 import Spin from "./assets/spinloading.svg";
 import { useEffect, useRef, useState, useMemo } from 'react';
 import Stream from './Components/Pages/Stream';
-import StreamingContent from './Components/Pages/Content';
+import StreamingContent from './Components/Pages/Browse';
 import Profile from './Components/Pages/Profile';
 import ChannelPage from './Components/Pages/Channel';
 import ProfilePage from './Components/Pages/Profile';
