@@ -6,7 +6,7 @@ function Browse() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch("http://localhost:5000/api/streams/live")
+        fetch("https://touchlive-backend.onrender.com/api/streams/live")
             .then(res => res.json())
             .then(data => setStreams(data));
     }, []);
