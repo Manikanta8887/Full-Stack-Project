@@ -20,7 +20,7 @@ const Profile = () => {
   useEffect(() => {
     if (firebaseUID) {
       axios
-        .get(`https://touchlive-backend.onrender.com/api/profile/${firebaseUID}`)
+        .get(`https://touchlive-backend-1.onrender.com/api/profile/${firebaseUID}`)
         .then((res) => {
           setUserData(res.data);
           setBio(res.data.bio || "");
@@ -35,7 +35,7 @@ const Profile = () => {
       updateObj.profilePic = newProfilePic;
     }
     axios
-      .put(`https://touchlive-backend.onrender.com/api/profile/${firebaseUID}`, updateObj, {
+      .put(`https://touchlive-backend-1.onrender.com/api/profile/${firebaseUID}`, updateObj, {
         headers: { "Content-Type": "application/json" },
       })
       .then((res) => {
