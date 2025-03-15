@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { updateProfilePic } from "../Redux/Store";
 import { ToastContainer, toast } from "react-toastify";
-import "./profile.css";
+import "./Profile.css";
 
 const Profile = () => {
   const dispatch = useDispatch();
