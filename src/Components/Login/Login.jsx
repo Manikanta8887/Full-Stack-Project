@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Input, Button } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone, SyncOutlined } from "@ant-design/icons";
-import { signInWithEmailAndPassword, signInWithPopup, signInAnonymously, sendPasswordResetEmail} from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, signInAnonymously, sendPasswordResetEmail, getAuth, onAuthStateChanged } from "firebase/auth";
 import { Auth, GoogleProvider } from "../Firebase/Firebaseconfig";
 import axios from "axios";
-import Logo from "../../assets/logo.png"; 
+import Logo from "../../assets/logo.png";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useDispatch } from "react-redux";
+import { setFirebaseUser } from "../Redux/Store";
 import "./Login.css";
 
 const Login = () => {
@@ -20,6 +22,18 @@ const Login = () => {
   const handleChange = (e) => {
     setUserdetails({ ...userdetails, [e.target.name]: e.target.value });
   };
+
+  const dispatch = useDispatch();
+  const auth = getAuth();
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("Dispatching Firebase User:", user.uid);
+        dispatch(setFirebaseUser({ uid: user.uid, email: user.email }));
+      }
+    });
+  }, [auth, dispatch]);
 
   const sendUserToBackend = async (userData, loginType) => {
     try {
@@ -37,9 +51,9 @@ const Login = () => {
         toast.success("Guest Login Successful!");
       }
       setTimeout(() => navigate("/livestreamingplatform", { replace: true }), 2000);
-    }  catch (error) {
+    } catch (error) {
       console.error("Login Error:", error);
-  
+
       if (error.response) {
         console.error("Error Status:", error.response.status);
         console.error("Error Data:", error.response.data);
@@ -64,6 +78,7 @@ const Login = () => {
           email: user.email,
           profilePic: user.photoURL || "",
         };
+        dispatch(setFirebaseUser({ uid: user.uid, email: user.email }));
         sendUserToBackend(userData, "email");
       })
       .catch(() => toast.error("Invalid email or password"))
@@ -81,6 +96,7 @@ const Login = () => {
           email: user.email,
           profilePic: user.photoURL,
         };
+        dispatch(setFirebaseUser({ uid: user.uid, email: user.email }));
         sendUserToBackend(userData, "google");
       })
       .catch(() => toast.error("Google login failed"))
@@ -99,6 +115,7 @@ const Login = () => {
           email: uniqueGuestEmail,
           profilePic: "",
         };
+        dispatch(setFirebaseUser({ uid: user.uid, email: user.email }));
         sendUserToBackend(userData, "guest");
       })
       .catch((error) => {
@@ -107,7 +124,7 @@ const Login = () => {
       })
       .finally(() => setLoading({ ...loading, guest: false }));
   };
-  
+
 
   const handleResetPassword = async () => {
     if (!resetEmail) {
@@ -136,17 +153,17 @@ const Login = () => {
             <h2 className="login-title">Reset Password</h2>
             <div className="input-group">
               <label>Email:</label>
-              <Input 
-                type="email" 
-                placeholder="Enter your email" 
-                value={resetEmail} 
-                onChange={(e) => setResetEmail(e.target.value)} 
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
               />
             </div>
             <div className="login-btn-group">
-              <Button 
-                type="primary" 
-                onClick={handleResetPassword} 
+              <Button
+                type="primary"
+                onClick={handleResetPassword}
                 icon={<SyncOutlined spin />}
               >
                 Send Reset Email
@@ -162,48 +179,48 @@ const Login = () => {
             <form onSubmit={handleEmailLogin}>
               <div className="input-group">
                 <label>Email:</label>
-                <Input 
-                  type="email" 
-                  name="email" 
-                  onChange={handleChange} 
-                  value={userdetails.email} 
+                <Input
+                  type="email"
+                  name="email"
+                  onChange={handleChange}
+                  value={userdetails.email}
                 />
               </div>
               <div className="input-group">
                 <label>Password:</label>
-                <Input.Password 
-                  name="password" 
-                  onChange={handleChange} 
-                  value={userdetails.password} 
+                <Input.Password
+                  name="password"
+                  onChange={handleChange}
+                  value={userdetails.password}
                   iconRender={(visible) =>
                     visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-                  } 
+                  }
                 />
               </div>
               <p className="forgot-password" onClick={() => setResetMode(true)}>
                 Forgot Password?
               </p>
               <div className="login-btn-group">
-                <Button 
-                  type="primary" 
-                  htmlType="submit" 
-                  loading={loading.email} 
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading.email}
                   icon={loading.email ? <SyncOutlined spin /> : null}
                 >
                   {loading.email ? "Logging in..." : "Login"}
                 </Button>
               </div>
               <div className="login-options">
-                <Button 
-                  onClick={handleGoogleLogin} 
-                  loading={loading.google} 
+                <Button
+                  onClick={handleGoogleLogin}
+                  loading={loading.google}
                   icon={loading.google ? <SyncOutlined spin /> : null}
                 >
                   {loading.google ? "Logging In..." : "Google Login"}
                 </Button>
-                <Button 
-                  onClick={handleGuestLogin} 
-                  loading={loading.guest} 
+                <Button
+                  onClick={handleGuestLogin}
+                  loading={loading.guest}
                   icon={loading.guest ? <SyncOutlined spin /> : null}
                 >
                   {loading.guest ? "Logging In..." : "Guest Login"}
@@ -216,16 +233,16 @@ const Login = () => {
           </>
         )}
       </div>
-      <ToastContainer 
-        position="top-right" 
-        autoClose={3000} 
-        hideProgressBar={false} 
-        newestOnTop 
-        closeOnClick 
-        rtl={false} 
-        pauseOnFocusLoss 
-        draggable 
-        pauseOnHover 
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
       />
     </div>
   );

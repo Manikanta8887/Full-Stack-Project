@@ -40,7 +40,7 @@ function App() {
         <img src={Spin} alt="Loading..." className='loading-container' />
       ) : (
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<LandingPage />}/>
           <Route path="/login" element={<Loginpage />} />
           <Route path="/signup" element={<Signup />} />
 
