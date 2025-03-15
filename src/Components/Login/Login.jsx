@@ -37,7 +37,7 @@ const Login = () => {
 
   const sendUserToBackend = async (userData, loginType) => {
     try {
-      await axios.post("http://localhost:5000/api/users", userData, {
+      await axios.post("https://full-stack-project-mani.vercel.app/api/users", userData, {
         headers: {
           "Content-Type": "application/json",
         },
