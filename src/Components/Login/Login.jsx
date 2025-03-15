@@ -37,7 +37,7 @@ const Login = () => {
 
   const sendUserToBackend = async (userData, loginType) => {
     try {
-      await axios.post("https://full-stack-project-mani.vercel.app/api/users", userData, {
+      await axios.post("https://touchlive-backend-1.onrender.com/api/users", userData, {
         headers: {
           "Content-Type": "application/json",
         },
