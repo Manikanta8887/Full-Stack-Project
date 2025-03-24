@@ -38,7 +38,7 @@ const Login = () => {
 
   const sendUserToBackend = async (userData, loginType) => {
     try {
-      await axios.post(`${baseurl}+api/users`, userData, {
+      await axios.post(`${baseurl}/api/users`, userData, {
         headers: {
           "Content-Type": "application/json",
         },
