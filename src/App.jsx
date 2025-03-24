@@ -7,9 +7,8 @@ import './App.css';
 import Signup from './Components/Login/Signup';
 import Spin from "./assets/spinloading.svg";
 import { useEffect, useRef, useState, useMemo } from 'react';
-import Stream from './Components/Pages/Startstreaming';
+import StartStreaming from './Components/Pages/Startstreaming';
 import StreamingContent from './Components/Pages/Browse';
-import Profile from './Components/Pages/Profile';
 import ChannelPage from './Components/Pages/Channel';
 import ProfilePage from './Components/Pages/Profile';
 
@@ -46,7 +45,7 @@ function App() {
 
           <Route path="/livestreamingplatform" element={<LiveStreamingPlatform />}>
             <Route index element={<StreamingContent />} />
-            <Route path="stream/:id" element={<Startstreaming />} />
+            <Route path="stream/:id" element={<StartStreaming />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="channel/:id" element={<ChannelPage />} />
           </Route>
