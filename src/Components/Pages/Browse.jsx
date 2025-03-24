@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import baseurl from "../base"
 
 function Browse() {
     const [streams, setStreams] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch("https://touchlive-backend-1.onrender.com/api/streams/live")
+        fetch(`${baseurl}+api/streams/live`)
             .then(res => res.json())
             .then(data => setStreams(data));
     }, []);

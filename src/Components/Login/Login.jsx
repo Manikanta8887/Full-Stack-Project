@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch } from "react-redux";
 import { setFirebaseUser } from "../Redux/Store";
 import "./Login.css";
+import baseurl from "../base"
 
 const Login = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const Login = () => {
 
   const sendUserToBackend = async (userData, loginType) => {
     try {
-      await axios.post("https://touchlive-backend-1.onrender.com/api/users", userData, {
+      await axios.post(`${baseurl}+api/users`, userData, {
         headers: {
           "Content-Type": "application/json",
         },

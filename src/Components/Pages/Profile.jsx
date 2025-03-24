@@ -4,6 +4,7 @@ import axios from "axios";
 import { updateProfilePic } from "../Redux/Store";
 import { ToastContainer, toast } from "react-toastify";
 import "./Profile.css";
+import baseurl from "../base.js"
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -20,7 +21,7 @@ const Profile = () => {
   useEffect(() => {
     if (firebaseUID) {
       axios
-        .get(`https://touchlive-backend-1.onrender.com/api/profile/${firebaseUID}`)
+        .get(`${baseurl}+api/profile/${firebaseUID}`)
         .then((res) => {
           setUserData(res.data);
           setBio(res.data.bio || "");
@@ -35,7 +36,7 @@ const Profile = () => {
       updateObj.profilePic = newProfilePic;
     }
     axios
-      .put(`https://touchlive-backend-1.onrender.com/api/profile/${firebaseUID}`, updateObj, {
+      .put(`${baseurl}+api/profile/${firebaseUID}`, updateObj, {
         headers: { "Content-Type": "application/json" },
       })
       .then((res) => {
