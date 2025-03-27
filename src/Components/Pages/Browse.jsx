@@ -3,26 +3,36 @@ import { useNavigate } from "react-router-dom";
 import baseurl from "../base"
 
 function Browse() {
-    const [streams, setStreams] = useState([]);
+    // const [streams, setStreams] = useState([]);
     const navigate = useNavigate();
 
+    // useEffect(() => {
+    //     fetch(`${baseurl}api/streams/live`)
+    //         .then(res => res.json())
+    //         .then(data => setStreams(data));
+    // }, []);
+
+    const [liveStreams, setLiveStreams] = useState([]);
+
     useEffect(() => {
-        fetch(`${baseurl}api/streams/live`)
-            .then(res => res.json())
-            .then(data => setStreams(data));
+        socket.on("update-streams", (streams) => {
+            setLiveStreams(streams);
+        });
     }, []);
 
     return (
         <div>
-            <h1>Live Streams</h1>
-            {streams.map((stream) => (
-                <div key={stream.streamId} onClick={() => navigate(`/stream/${stream.streamId}`)}>
-                    <h2>{stream.streamTitle} - {stream.streamerName}</h2>
-                    <p>Click to watch</p>
+            <h2>Live Streams</h2>
+            {liveStreams.map((stream, index) => (
+                <div key={index}>
+                    <h3>{stream.streamTitle}</h3>
+                    <p>Streamer: {stream.id}</p>
                 </div>
             ))}
         </div>
     );
+
 }
 
 export default Browse;
+
