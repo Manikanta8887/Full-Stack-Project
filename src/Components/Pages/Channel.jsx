@@ -2,7 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 
 const ChannelPage = () => {
-  const { channelId } = useParams(); // Get channelId from URL
+  const { channelId } = useParams(); 
 
   return (
     <div style={{ padding: "20px" }}>
