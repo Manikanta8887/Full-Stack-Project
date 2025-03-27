@@ -7,7 +7,7 @@ function Browse() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch(`${baseurl}+api/streams/live`)
+        fetch(`${baseurl}api/streams/live`)
             .then(res => res.json())
             .then(data => setStreams(data));
     }, []);
