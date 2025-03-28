@@ -151,7 +151,7 @@ import { io } from "socket.io-client"; // Ensure correct import
 import baseurl from "../base";
 
 const StartStreaming = () => {
-  const [socket, setSocket] = useState(null);
+  const socketRef = useRef(null); // Use useRef for stable socket reference
   const [stream, setStream] = useState(null);
   const [screenSharing, setScreenSharing] = useState(false);
   const videoRef = useRef(null);
@@ -164,28 +164,27 @@ const StartStreaming = () => {
   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
   useEffect(() => {
-    const newSocket = io(baseurl); // Initialize socket inside useEffect
-    setSocket(newSocket);
+    socketRef.current = io(baseurl); // Initialize socket inside useEffect
 
-    newSocket.on("offer", async (offer) => {
+    socketRef.current.on("offer", async (offer) => {
       if (!peerConnection.current) return;
       await peerConnection.current.setRemoteDescription(offer);
       const answer = await peerConnection.current.createAnswer();
       await peerConnection.current.setLocalDescription(answer);
-      newSocket.emit("answer", answer);
+      socketRef.current.emit("answer", answer);
     });
 
-    newSocket.on("candidate", (candidate) => {
+    socketRef.current.on("candidate", (candidate) => {
       if (!peerConnection.current) return;
       peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
     });
 
-    newSocket.on("chat-message", (msg) => {
+    socketRef.current.on("chat-message", (msg) => {
       setMessages((prev) => [...prev, msg]);
     });
 
     return () => {
-      newSocket.disconnect(); // Cleanup when component unmounts
+      socketRef.current?.disconnect(); // Cleanup when component unmounts
     };
   }, []);
 
@@ -212,13 +211,13 @@ const StartStreaming = () => {
 
       peerConnection.current.onicecandidate = (event) => {
         if (event.candidate) {
-          socket?.emit("candidate", event.candidate);
+          socketRef.current?.emit("candidate", event.candidate);
         }
       };
 
       const offer = await peerConnection.current.createOffer();
       await peerConnection.current.setLocalDescription(offer);
-      socket?.emit("offer", offer, streamTitle);
+      socketRef.current?.emit("offer", offer, streamTitle);
     } catch (err) {
       console.error("Error accessing media devices:", err);
     }
@@ -228,7 +227,7 @@ const StartStreaming = () => {
     stream?.getTracks().forEach((track) => track.stop());
     setStream(null);
     setIsStreaming(false);
-    socket?.emit("stop-stream");
+    socketRef.current?.emit("stop-stream");
   };
 
   const toggleScreenShare = async () => {
@@ -248,7 +247,7 @@ const StartStreaming = () => {
   };
 
   const sendMessage = () => {
-    socket?.emit("chat-message", message);
+    socketRef.current?.emit("chat-message", message);
     setMessage("");
   };
 
