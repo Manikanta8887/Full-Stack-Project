@@ -4,7 +4,7 @@ import axios from "axios";
 import { updateProfilePic } from "../Redux/Store";
 import { ToastContainer, toast } from "react-toastify";
 import "./Profile.css";
-import baseurl from "../base.js";
+import baseurl from "../../base.js";
 
 const Profile = () => {
   const dispatch = useDispatch();
