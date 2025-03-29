@@ -7,4 +7,4 @@ socket.on("connect", () => {
   console.log("Connected to WebSocket server:", socket.id);
 });
 
-export default socket
+export default socket;

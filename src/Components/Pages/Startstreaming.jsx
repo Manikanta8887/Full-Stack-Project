@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import socket from "../socket";
-import baseurl from "../base"; // In case you need it for other purposes
+import socket from "../../socket"; // Correct relative path
+import baseurl from "../../base";  // if needed
 
 const StartStreaming = () => {
   const [stream, setStream] = useState(null);
@@ -93,18 +93,18 @@ const StartStreaming = () => {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
       });
-      const sender = peerConnection.current.getSenders().find(
-        (s) => s.track && s.track.kind === "video"
-      );
+      const sender = peerConnection.current
+        .getSenders()
+        .find((s) => s.track && s.track.kind === "video");
       if (sender) {
         sender.replaceTrack(screenStream.getVideoTracks()[0]);
       }
       setScreenSharing(true);
     } else {
       const userStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const sender = peerConnection.current.getSenders().find(
-        (s) => s.track && s.track.kind === "video"
-      );
+      const sender = peerConnection.current
+        .getSenders()
+        .find((s) => s.track && s.track.kind === "video");
       if (sender) {
         sender.replaceTrack(userStream.getVideoTracks()[0]);
       }
