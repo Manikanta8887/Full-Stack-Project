@@ -1,36 +1,55 @@
 // import React, { useState, useRef, useEffect } from "react";
-// import io from "socket.io-client";
-// import baseurl from "../base"
-
-// const socket = io(`${baseurl}`); // Replace with your backend URL
+// import { io } from "socket.io-client"; // Ensure correct import
+// import baseurl from "../base";
 
 // const StartStreaming = () => {
-
+//   const [socket, setSocket] = useState(null);
 //   const [stream, setStream] = useState(null);
 //   const [screenSharing, setScreenSharing] = useState(false);
 //   const videoRef = useRef(null);
 //   const peerConnection = useRef(null);
 //   const [streamTitle, setStreamTitle] = useState("");
 //   const [isStreaming, setIsStreaming] = useState(false);
+//   const [messages, setMessages] = useState([]);
+//   const [message, setMessage] = useState("");
 
 //   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 //   useEffect(() => {
-//     socket.on("offer", async (offer) => {
+//     const newSocket = io(baseurl, { transports: ["websocket"] }); 
+//     setSocket(newSocket);
+
+//     newSocket.on("connect", () => {
+//       console.log("Connected to WebSocket server");
+//     });
+
+//     newSocket.on("offer", async (offer) => {
 //       if (!peerConnection.current) return;
 //       await peerConnection.current.setRemoteDescription(offer);
 //       const answer = await peerConnection.current.createAnswer();
 //       await peerConnection.current.setLocalDescription(answer);
-//       socket.emit("answer", answer);
+//       newSocket.emit("answer", answer);
 //     });
 
-//     socket.on("candidate", (candidate) => {
+//     newSocket.on("candidate", (candidate) => {
 //       if (!peerConnection.current) return;
 //       peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
 //     });
+
+//     newSocket.on("chat-message", (msg) => {
+//       setMessages((prev) => [...prev, msg]);
+//     });
+
+//     return () => {
+//       newSocket.disconnect(); // Cleanup when component unmounts
+//     };
 //   }, []);
 
 //   const startStreaming = async () => {
+//     if (!socket) {
+//       console.error("Socket not initialized");
+//       return;
+//     }
 //     if (!streamTitle) {
 //       alert("Please enter a stream title!");
 //       return;
@@ -43,7 +62,7 @@
 //       });
 
 //       setStream(userStream);
-//       videoRef.current.srcObject = userStream;
+//       if (videoRef.current) videoRef.current.srcObject = userStream;
 //       setIsStreaming(true);
 
 //       peerConnection.current = new RTCPeerConnection(servers);
@@ -52,7 +71,7 @@
 //       });
 
 //       peerConnection.current.onicecandidate = (event) => {
-//         if (event.candidate) {
+//         if (event.candidate && socket) {
 //           socket.emit("candidate", event.candidate);
 //         }
 //       };
@@ -66,6 +85,10 @@
 //   };
 
 //   const stopStreaming = () => {
+//     if (!socket) {
+//       console.error("Socket not initialized");
+//       return;
+//     }
 //     stream?.getTracks().forEach((track) => track.stop());
 //     setStream(null);
 //     setIsStreaming(false);
@@ -73,6 +96,7 @@
 //   };
 
 //   const toggleScreenShare = async () => {
+//     if (!peerConnection.current) return;
 //     if (!screenSharing) {
 //       const screenStream = await navigator.mediaDevices.getDisplayMedia({
 //         video: true,
@@ -88,22 +112,15 @@
 //     }
 //   };
 
-
-//   const [messages, setMessages] = useState([]);
-//   const [message, setMessage] = useState("");
-
-//   useEffect(() => {
-//     socket.on("chat-message", (msg) => {
-//       setMessages((prev) => [...prev, msg]);
-//     });
-//   }, []);
-
 //   const sendMessage = () => {
+//     if (!socket) {
+//       console.error("Socket not initialized");
+//       return;
+//     }
 //     socket.emit("chat-message", message);
 //     setMessage("");
 //   };
 
-  
 //   return (
 //     <div>
 //       <h2>Start Streaming</h2>
@@ -137,9 +154,7 @@
 //         <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} />
 //         <button onClick={sendMessage}>Send</button>
 //       </div>
-
 //     </div>
-
 //   );
 // };
 
@@ -147,11 +162,9 @@
 
 
 import React, { useState, useRef, useEffect } from "react";
-import { io } from "socket.io-client"; // Ensure correct import
-import baseurl from "../base";
+import socket from "../socket";
 
 const StartStreaming = () => {
-  const [socket, setSocket] = useState(null);
   const [stream, setStream] = useState(null);
   const [screenSharing, setScreenSharing] = useState(false);
   const videoRef = useRef(null);
@@ -164,40 +177,33 @@ const StartStreaming = () => {
   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
   useEffect(() => {
-    const newSocket = io(baseurl, { transports: ["websocket"] }); // Force WebSocket connection
-    setSocket(newSocket);
+    if (!socket) return;
 
-    newSocket.on("connect", () => {
-      console.log("Connected to WebSocket server");
-    });
-
-    newSocket.on("offer", async (offer) => {
+    socket.on("offer", async (offer) => {
       if (!peerConnection.current) return;
       await peerConnection.current.setRemoteDescription(offer);
       const answer = await peerConnection.current.createAnswer();
       await peerConnection.current.setLocalDescription(answer);
-      newSocket.emit("answer", answer);
+      socket.emit("answer", answer);
     });
 
-    newSocket.on("candidate", (candidate) => {
+    socket.on("candidate", (candidate) => {
       if (!peerConnection.current) return;
       peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
     });
 
-    newSocket.on("chat-message", (msg) => {
+    socket.on("chat-message", (msg) => {
       setMessages((prev) => [...prev, msg]);
     });
 
     return () => {
-      newSocket.disconnect(); // Cleanup when component unmounts
+      socket.off("offer");
+      socket.off("candidate");
+      socket.off("chat-message");
     };
   }, []);
 
   const startStreaming = async () => {
-    if (!socket) {
-      console.error("Socket not initialized");
-      return;
-    }
     if (!streamTitle) {
       alert("Please enter a stream title!");
       return;
@@ -219,7 +225,7 @@ const StartStreaming = () => {
       });
 
       peerConnection.current.onicecandidate = (event) => {
-        if (event.candidate && socket) {
+        if (event.candidate) {
           socket.emit("candidate", event.candidate);
         }
       };
@@ -233,40 +239,10 @@ const StartStreaming = () => {
   };
 
   const stopStreaming = () => {
-    if (!socket) {
-      console.error("Socket not initialized");
-      return;
-    }
     stream?.getTracks().forEach((track) => track.stop());
     setStream(null);
     setIsStreaming(false);
     socket.emit("stop-stream");
-  };
-
-  const toggleScreenShare = async () => {
-    if (!peerConnection.current) return;
-    if (!screenSharing) {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-      });
-      const sender = peerConnection.current.getSenders().find((s) => s.track.kind === "video");
-      sender.replaceTrack(screenStream.getVideoTracks()[0]);
-      setScreenSharing(true);
-    } else {
-      const userStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const sender = peerConnection.current.getSenders().find((s) => s.track.kind === "video");
-      sender.replaceTrack(userStream.getVideoTracks()[0]);
-      setScreenSharing(false);
-    }
-  };
-
-  const sendMessage = () => {
-    if (!socket) {
-      console.error("Socket not initialized");
-      return;
-    }
-    socket.emit("chat-message", message);
-    setMessage("");
   };
 
   return (
@@ -280,28 +256,10 @@ const StartStreaming = () => {
           onChange={(e) => setStreamTitle(e.target.value)}
         />
       )}
-      {!isStreaming ? (
-        <button onClick={startStreaming}>Start Streaming</button>
-      ) : (
-        <button onClick={stopStreaming}>Stop Streaming</button>
-      )}
-      {isStreaming && (
-        <div>
-          <button onClick={toggleScreenShare}>
-            {screenSharing ? "Stop Screen Share" : "Share Screen"}
-          </button>
-        </div>
-      )}
+      <button onClick={isStreaming ? stopStreaming : startStreaming}>
+        {isStreaming ? "Stop Streaming" : "Start Streaming"}
+      </button>
       <video ref={videoRef} autoPlay playsInline muted />
-      <div>
-        <div>
-          {messages.map((msg, index) => (
-            <p key={index}>{msg}</p>
-          ))}
-        </div>
-        <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} />
-        <button onClick={sendMessage}>Send</button>
-      </div>
     </div>
   );
 };
