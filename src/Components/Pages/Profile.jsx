@@ -211,7 +211,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
 import { updateUser } from "../Redux/userSlice.js";
 import axios from "axios";
-import { auth } from "../../firebase";
+import { auth } from "../Firebase/Firebaseconfig.js";
 import "./Profile.css";
 
 const { Title } = Typography;
