@@ -163,7 +163,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button, Card, Space, message, Typography, Input, Row, Col, List } from "antd";
 import { VideoCameraOutlined, AudioOutlined, DesktopOutlined, StopOutlined, SendOutlined } from "@ant-design/icons";
 import socket from "../../socket"; // Ensure correct import
-import "./StartStreaming.css";
+import "./Startstreaming.css"
 
 const { Title } = Typography;
 
