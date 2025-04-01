@@ -212,33 +212,34 @@ import { useSelector, useDispatch } from "react-redux";
 import { updateUser } from "../Redux/userSlice.js";
 import axios from "axios";
 import { auth } from "../Firebase/Firebaseconfig.js";
+import { useNavigate } from "react-router-dom";
 import "./Profile.css";
 
 const { Title } = Typography;
 
 const ProfilePage = () => {
-  // Get the entire user slice from Redux
   const user = useSelector((state) => state.user);
-  // Destructure firebaseUser from the slice for clarity
   const firebaseUser = user.firebaseUser;
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  // Initialize profilePic state based on firebaseUser.photoURL (or fallback to user.profilePic)
-  const [profilePic, setProfilePic] = useState(
-    firebaseUser ? firebaseUser.photoURL : user.profilePic || ""
-  );
+  const [profilePic, setProfilePic] = useState(firebaseUser?.photoURL || user.profilePic || "");
 
   useEffect(() => {
-    if (firebaseUser) {
-      form.setFieldsValue({
-        username: firebaseUser.displayName || "",
-        email: firebaseUser.email || "",
-        bio: user.bio || "",
-      });
-      setProfilePic(firebaseUser.photoURL || user.profilePic || "");
+    if (!firebaseUser) {
+      navigate("/login"); // Redirect if not logged in
+      return;
     }
-  }, [firebaseUser, user.bio, form, user.profilePic]);
+
+    form.setFieldsValue({
+      username: firebaseUser.displayName || "",
+      email: firebaseUser.email || "",
+      bio: user.bio || "",
+    });
+
+    setProfilePic(firebaseUser.photoURL || user.profilePic || "");
+  }, [firebaseUser, user.bio, form, user.profilePic, navigate]);
 
   const handleUpdate = async (values) => {
     if (!firebaseUser) {
@@ -247,11 +248,8 @@ const ProfilePage = () => {
     }
     setLoading(true);
     try {
-      // Merge values with the current firebaseUser and profilePic
       const updatedUser = { ...firebaseUser, ...values, profilePic, bio: values.bio };
-      // Use firebaseUser.uid for the API call
-      await axios.put(`/api/users/${firebaseUser.uid}`, updatedUser);
-      // Dispatch the updateUser action to update Redux state
+      await axios.put(`/api/users/${user.id || firebaseUser.uid}`, updatedUser);
       dispatch(updateUser(updatedUser));
       message.success("Profile updated successfully!");
     } catch (error) {
@@ -263,7 +261,7 @@ const ProfilePage = () => {
 
   const handleProfilePicUpload = (info) => {
     if (info.file.status === "done") {
-      const imageUrl = info.file.response.imageUrl; // Assuming backend returns URL
+      const imageUrl = info.file?.response?.imageUrl || profilePic;
       setProfilePic(imageUrl);
       message.success("Profile picture updated!");
     } else if (info.file.status === "error") {
@@ -278,7 +276,7 @@ const ProfilePage = () => {
         <Avatar size={100} src={profilePic || "/default-avatar.png"} />
         <Upload
           name="profilePic"
-          action="/api/upload" // Backend endpoint for image upload
+          action="/api/upload"
           showUploadList={false}
           onChange={handleProfilePicUpload}
         >
