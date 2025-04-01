@@ -34,13 +34,15 @@
 
 
 import { configureStore } from "@reduxjs/toolkit";
-import userReducer from "./userSlice"; // Import the user slice reducer
+import userReducer from "./userSlice.js"; 
 
 const store = configureStore({
   reducer: {
-    user: userReducer, // Add the user reducer to the store
+    user: userReducer, 
   },
 });
 
 export default store;
+
+
 
