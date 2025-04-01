@@ -209,7 +209,7 @@ import React, { useEffect, useState } from "react";
 import { Form, Input, Button, Avatar, Upload, message, Typography } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
-import { updateUser } from "../../redux/userSlice";
+import { updateUser } from "../Redux/userSlice.js";
 import axios from "axios";
 import { auth } from "../../firebase";
 import "./Profile.css";
