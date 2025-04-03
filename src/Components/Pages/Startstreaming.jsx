@@ -152,20 +152,16 @@
 
 
 import React, { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { Button, Card, Space, message, Typography, Input, Row, Col, List } from "antd";
-import {
-  VideoCameraOutlined,
-  AudioOutlined,
-  DesktopOutlined,
-  StopOutlined,
-  SendOutlined,
-} from "@ant-design/icons";
+import { VideoCameraOutlined, StopOutlined, SendOutlined } from "@ant-design/icons";
 import socket from "../../socket"; // Ensure correct import
 import "./Startstreaming.css";
 
 const { Title } = Typography;
 
 const StartStreaming = () => {
+  const firebaseUser = useSelector((state) => state.user.firebaseUser);
   const videoRef = useRef(null);
   const chatEndRef = useRef(null);
   const [stream, setStream] = useState(null);
@@ -173,12 +169,12 @@ const StartStreaming = () => {
   const [streamTitle, setStreamTitle] = useState("");
   const [error, setError] = useState("");
 
-  // Chat state
+  // Chat state: now each message includes username, userId, message, and time
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
 
   useEffect(() => {
-    // Listen for incoming chat messages
+    // Listen for incoming chat messages that include sender info
     socket.on("chat-message", (msg) => {
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
@@ -189,6 +185,7 @@ const StartStreaming = () => {
   }, []);
 
   useEffect(() => {
+    // Cleanup media stream when component unmounts
     return () => {
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
@@ -197,7 +194,7 @@ const StartStreaming = () => {
   }, [stream]);
 
   useEffect(() => {
-    // Auto-scroll to the latest message
+    // Auto-scroll to the latest chat message
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -223,6 +220,9 @@ const StartStreaming = () => {
       setIsStreaming(true);
       setError("");
       message.success("Streaming started!");
+
+      // Emit a start-stream event (optional: include firebaseUser.uid if needed)
+      socket.emit("start-stream", { streamTitle, userId: firebaseUser?.uid || "guest" });
     } catch (err) {
       console.error("Error accessing media devices:", err);
       setError("Failed to access camera/microphone. Please check permissions.");
@@ -237,11 +237,19 @@ const StartStreaming = () => {
     setStream(null);
     setIsStreaming(false);
     message.info("Streaming stopped.");
+    socket.emit("stop-stream");
   };
 
   const sendMessage = () => {
     if (messageInput.trim()) {
-      socket.emit("chat-message", messageInput);
+      // Prepare the chat message object including sender info
+      const chatData = {
+        userId: firebaseUser ? firebaseUser.uid : "Guest",
+        username: firebaseUser ? firebaseUser.displayName : "Guest",
+        message: messageInput,
+        time: new Date().toLocaleTimeString(),
+      };
+      socket.emit("chat-message", chatData);
       setMessageInput("");
     }
   };
@@ -262,7 +270,7 @@ const StartStreaming = () => {
               size="large"
             />
 
-            <video ref={videoRef} className="stream-video" autoPlay playsInline></video>
+            <video ref={videoRef} className="stream-video" autoPlay playsInline muted></video>
 
             {error && <p className="error-text">{error}</p>}
 
@@ -280,7 +288,7 @@ const StartStreaming = () => {
           </Space>
         </Card>
 
-        {/* Chat Box */}
+        {/* Chat Box: now displays username, message, and time */}
         {isStreaming && (
           <Card className="chat-box">
             <Title level={4} className="chat-title">
@@ -289,7 +297,11 @@ const StartStreaming = () => {
             <List
               className="chat-messages"
               dataSource={messages}
-              renderItem={(msg, index) => <List.Item key={index}>{msg}</List.Item>}
+              renderItem={(msg, index) => (
+                <List.Item key={index}>
+                  <strong>{msg.username}</strong>: {msg.message} <em style={{ fontSize: "0.8em", color: "#999" }}>{msg.time}</em>
+                </List.Item>
+              )}
             />
             <div ref={chatEndRef}></div>
 
