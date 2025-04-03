@@ -161,9 +161,7 @@ const ChannelPage = () => {
           </Button>
         )}
       </div>
-
       <Divider />
-
       {/* Live Stream Section */}
       <div className="live-stream-section">
         <Title level={3} className="live-now">🎥 Live Now</Title>
@@ -174,15 +172,13 @@ const ChannelPage = () => {
             cover={<img alt="Live Stream" src={liveStream.thumbnail || "/default-stream.jpg"} />}
             onClick={() => navigate(`/livestreamingplatform/stream/${liveStream.id}`)}
           >
-            <Card.Meta title={liveStream.title} description="Currently Live" />
+            <Card.Meta title={liveStream.streamTitle} description="Currently Live" />
           </Card>
         ) : (
           <Text type="secondary">No live stream currently</Text>
         )}
       </div>
-
       <Divider />
-
       {/* Past Streams Section */}
       <Title level={3}>📺 Past Streams</Title>
       {pastStreams.length === 0 ? (
@@ -197,7 +193,7 @@ const ChannelPage = () => {
                 cover={<img alt="Past Stream" src={stream.thumbnail || "/default-stream.jpg"} />}
                 onClick={() => navigate(`/livestreamingplatform/stream/${stream.id}`)}
               >
-                <Card.Meta title={stream.title} description={`On ${stream.date}`} />
+                <Card.Meta title={stream.streamTitle} description={`On ${stream.date}`} />
               </Card>
             </Col>
           ))}

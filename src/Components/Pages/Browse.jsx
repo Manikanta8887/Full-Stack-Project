@@ -102,13 +102,19 @@ const Browse = () => {
       setPastStreams(data.pastStreams);
     });
 
+    // Also listen for updates from "update-streams"
+    socket.on("update-streams", (streams) => {
+      setLiveStreams(streams); // Assume pastStreams are handled via API call in real implementation
+    });
+
     return () => {
       socket.off("stream-list");
+      socket.off("update-streams");
     };
   }, []);
 
   const filteredLiveStreams = liveStreams.filter((stream) =>
-    stream.title.toLowerCase().includes(searchQuery.toLowerCase())
+    stream.streamTitle.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -119,7 +125,6 @@ const Browse = () => {
         onChange={(e) => setSearchQuery(e.target.value)}
         style={{ width: 300, marginBottom: 20 }}
       />
-
       <Row gutter={[16, 16]}>
         {filteredLiveStreams.length === 0 ? (
           <p>No live streams available</p>
@@ -131,14 +136,13 @@ const Browse = () => {
                   hoverable
                   cover={<img alt="Live Stream" src={stream.thumbnail || "/default-stream.jpg"} />}
                 >
-                  <Card.Meta title={stream.title} description={`By ${stream.user}`} />
+                  <Card.Meta title={stream.streamTitle} description={`By ${stream.user || "Unknown"}`} />
                 </Card>
               </Link>
             </Col>
           ))
         )}
       </Row>
-
       <Title level={3} style={{ marginTop: 30 }}>📺 Past Streams</Title>
       <Row gutter={[16, 16]}>
         {pastStreams.length === 0 ? (
@@ -150,7 +154,7 @@ const Browse = () => {
                 hoverable
                 cover={<img alt="Past Stream" src={stream.thumbnail || "/default-stream.jpg"} />}
               >
-                <Card.Meta title={stream.title} description={`By ${stream.user} on ${stream.date}`} />
+                <Card.Meta title={stream.streamTitle} description={`By ${stream.user || "Unknown"} on ${stream.date}`} />
               </Card>
             </Col>
           ))
