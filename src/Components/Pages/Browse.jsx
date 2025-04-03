@@ -80,6 +80,7 @@
 
 // export default Browse;
 
+// Browse.jsx
 import React, { useState, useEffect } from "react";
 import { Card, Input, Row, Col, Typography } from "antd";
 import { Link } from "react-router-dom";
@@ -95,6 +96,7 @@ const Browse = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    // Request the current stream lists from the backend via socket.
     socket.emit("get-streams");
 
     socket.on("stream-list", (data) => {
@@ -102,9 +104,9 @@ const Browse = () => {
       setPastStreams(data.pastStreams);
     });
 
-    // Also listen for updates from "update-streams"
+    // Listen for live updates (active streams update)
     socket.on("update-streams", (streams) => {
-      setLiveStreams(streams); // Assume pastStreams are handled via API call in real implementation
+      setLiveStreams(streams);
     });
 
     return () => {
@@ -136,7 +138,10 @@ const Browse = () => {
                   hoverable
                   cover={<img alt="Live Stream" src={stream.thumbnail || "/default-stream.jpg"} />}
                 >
-                  <Card.Meta title={stream.streamTitle} description={`By ${stream.user || "Unknown"}`} />
+                  <Card.Meta
+                    title={stream.streamTitle}
+                    description={`By ${stream.streamerName || stream.streamerId || "Unknown"}`}
+                  />
                 </Card>
               </Link>
             </Col>
@@ -154,7 +159,12 @@ const Browse = () => {
                 hoverable
                 cover={<img alt="Past Stream" src={stream.thumbnail || "/default-stream.jpg"} />}
               >
-                <Card.Meta title={stream.streamTitle} description={`By ${stream.user || "Unknown"} on ${stream.date}`} />
+                <Card.Meta
+                  title={stream.streamTitle}
+                  description={`By ${stream.streamerName || stream.streamerId || "Unknown"} on ${new Date(
+                    stream.endTime
+                  ).toLocaleDateString()}`}
+                />
               </Card>
             </Col>
           ))

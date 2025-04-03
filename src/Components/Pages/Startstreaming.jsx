@@ -151,6 +151,7 @@
 // export default StartStreaming;
 
 
+// StartStreaming.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Button, Card, Space, message, Typography, Input, Row, Col, List } from "antd";
@@ -175,23 +176,27 @@ const StartStreaming = () => {
   const videoRef = useRef(null);
   const chatEndRef = useRef(null);
 
-  // Stream state
+  // Streaming state
   const [stream, setStream] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamTitle, setStreamTitle] = useState("");
   const [error, setError] = useState("");
 
-  // Chat state: each message includes username, userId, message, and time
+  // Chat state: each message now includes username, userId, message, and time
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
 
-  // Control state
+  // Control state for additional options
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(true);
 
-  // Listen for chat messages
+  // WebRTC Peer Connection (basic setup for demonstration)
+  const peerConnectionRef = useRef(null);
+  const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
   useEffect(() => {
+    // Listen for incoming chat messages (which include sender info)
     socket.on("chat-message", (msg) => {
       setMessages((prev) => [...prev, msg]);
     });
@@ -200,8 +205,8 @@ const StartStreaming = () => {
     };
   }, []);
 
-  // Cleanup media tracks on unmount
   useEffect(() => {
+    // Cleanup media tracks when component unmounts
     return () => {
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
@@ -209,8 +214,8 @@ const StartStreaming = () => {
     };
   }, [stream]);
 
-  // Auto-scroll for chat messages
   useEffect(() => {
+    // Auto-scroll chat to the latest message
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -243,16 +248,36 @@ const StartStreaming = () => {
     }
   };
 
+  // Screen sharing functionality
+  const toggleScreenShare = async () => {
+    try {
+      if (stream) {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const videoTrack = screenStream.getVideoTracks()[0];
+        const sender = peerConnectionRef.current.getSenders().find((s) => s.track.kind === "video");
+        if (sender) {
+          sender.replaceTrack(videoTrack);
+          // Listen for screen share end
+          videoTrack.onended = () => {
+            // Restore original video stream
+            const originalTrack = stream.getVideoTracks()[0];
+            sender.replaceTrack(originalTrack);
+          };
+        }
+      }
+    } catch (err) {
+      console.error("Error in screen sharing:", err);
+    }
+  };
+
+  // Start streaming: Capture media, set up WebRTC peer connection, and notify backend via socket
   const startStream = async () => {
     if (!streamTitle.trim()) {
       message.warning("Please enter a stream title before starting.");
       return;
     }
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
@@ -261,7 +286,19 @@ const StartStreaming = () => {
       setError("");
       message.success("Streaming started!");
 
-      // Emit start-stream event with stream title and streamer id
+      // Set up a basic RTCPeerConnection (for demonstration; signaling is simplified)
+      peerConnectionRef.current = new RTCPeerConnection(servers);
+      mediaStream.getTracks().forEach((track) => {
+        peerConnectionRef.current.addTrack(track, mediaStream);
+      });
+      peerConnectionRef.current.onicecandidate = (event) => {
+        if (event.candidate) {
+          // In a complete implementation, send ICE candidates via your signaling server
+          console.log("New ICE candidate:", event.candidate);
+        }
+      };
+
+      // Notify backend about the new stream
       socket.emit("start-stream", { streamTitle, streamerId: firebaseUser ? firebaseUser.uid : "Guest" });
     } catch (err) {
       console.error("Error accessing media devices:", err);
@@ -280,6 +317,7 @@ const StartStreaming = () => {
     socket.emit("stop-stream");
   };
 
+  // Send chat message with sender details
   const sendMessage = () => {
     if (messageInput.trim()) {
       const chatData = {
@@ -331,6 +369,7 @@ const StartStreaming = () => {
                 <Button onClick={toggleCamera}>
                   {isCameraOn ? <CameraOnIcon /> : <CameraOffIcon />}
                 </Button>
+                <Button onClick={toggleScreenShare}>Share Screen</Button>
               </Space>
             )}
           </Space>

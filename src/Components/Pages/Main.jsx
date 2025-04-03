@@ -169,7 +169,8 @@
 // export default LiveStreamingPlatform;
 
 
-import React, { useState, useEffect } from "react";
+// LiveStreamingPlatform.jsx
+import React, { useEffect, useState } from "react";
 import { Layout, Menu, Input, Button, Avatar, Row, Col, Typography, Space, Badge } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
@@ -219,7 +220,6 @@ const LiveStreamingPlatform = () => {
         dispatch(setFirebaseUser(null));
       }
     });
-
     return () => unsubscribe();
   }, [auth, dispatch]);
 
@@ -253,7 +253,6 @@ const LiveStreamingPlatform = () => {
             </Title>
           )}
         </div>
-
         <Menu
           theme="dark"
           mode="inline"
@@ -266,7 +265,6 @@ const LiveStreamingPlatform = () => {
             { key: "/livestreamingplatform/profile", icon: <UserOutlined />, label: "Profile" },
           ]}
         />
-
         {!collapsed && (
           <div className="recommended-section">
             <Title level={5} className="recommended-title" style={{ color: "white" }}>
@@ -283,7 +281,6 @@ const LiveStreamingPlatform = () => {
                 label: channel.name,
               }))}
             />
-
             <div className="auth-button-container" style={{ padding: "16px", textAlign: "center" }}>
               {firebaseUser ? (
                 <Button type="primary" danger block onClick={handleLogout}>
@@ -298,7 +295,6 @@ const LiveStreamingPlatform = () => {
           </div>
         )}
       </Sider>
-
       <Layout>
         <Header className="custom-header">
           <Row align="middle" justify="space-between" className="header-row" style={{ width: "100%" }}>
@@ -310,7 +306,6 @@ const LiveStreamingPlatform = () => {
                 className="toggle-btn"
               />
             </Col>
-
             <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
               <Search
                 placeholder="Search streams..."
@@ -320,7 +315,6 @@ const LiveStreamingPlatform = () => {
                 style={{ width: "100%", maxWidth: "400px" }}
               />
             </Col>
-
             <Col flex="none">
               <Space size="large">
                 {firebaseUser ? (
@@ -335,11 +329,9 @@ const LiveStreamingPlatform = () => {
             </Col>
           </Row>
         </Header>
-
         <Content className="custom-content">
           <Outlet />
         </Content>
-
         <Footer className="custom-footer">© 2025 Touch Live. All Rights Reserved.</Footer>
       </Layout>
     </Layout>
