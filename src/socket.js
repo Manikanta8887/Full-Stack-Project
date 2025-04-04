@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import baseurl from "./base";
+import baseurl from "./base.js";
 
 const socket = io(baseurl, { transports: ["websocket"] });
 
