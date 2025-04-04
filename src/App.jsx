@@ -102,13 +102,15 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Loginpage />} />
           <Route path="/signup" element={<Signup />} />
+
           <Route path="/livestreamingplatform" element={<LiveStreamingPlatform />}>
             <Route index element={<StreamingContent />} />
             <Route path="stream/:id" element={<StartStreaming />} />
-            <Route path="watch/:id" element={<WatchStream />} />  {/* NEW Route */}
+            <Route path="watch/:id" element={<WatchStream />} /> {/* NEW Route */}
             <Route path="profile" element={<ProfilePage />} />
             <Route path="channel/:id" element={<ChannelPage />} />
           </Route>
+
           <Route path="/*" element={<PageNotFound />} />
         </Routes>
       )}

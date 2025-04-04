@@ -100,6 +100,7 @@
 // export default ChannelPage;
 
 
+
 // WatchStream.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -116,16 +117,14 @@ const WatchStream = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Emit an event to fetch stream info based on the stream ID (socket.id)
+    // Request stream details based on the stream ID
     socket.emit("get-stream-info", { streamId: id });
-    
+
     socket.on("stream-info", (data) => {
       if (data) {
         setStreamInfo(data);
         message.success(`Joined stream: ${data.streamTitle}`);
-        // Here, you would typically set up your RTCPeerConnection to receive the remote stream,
-        // then attach the received remote stream to videoRef.current.srcObject.
-        // For a fresher project, this can be a placeholder for future WebRTC implementation.
+        // In a complete implementation, set up RTCPeerConnection here and attach remote stream to videoRef.current.srcObject.
       } else {
         setError("Stream not found or ended.");
       }
