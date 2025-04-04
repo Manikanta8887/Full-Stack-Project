@@ -67,7 +67,9 @@ import Signup from "./Components/Login/Signup";
 import StartStreaming from "./Components/Pages/Startstreaming";
 import StreamingContent from "./Components/Pages/Browse";
 import ProfilePage from "./Components/Pages/Profile";
-import WatchStream from "./Components/Pages/WatchStream"; // NEW import
+// import WatchStream from "./Components/Pages/WatchStream"; // NEW import
+import WatchStream from "./Components/Pages/WatchStream.jsx";
+
 import "./App.css";
 import Spin from "./assets/spinloading.svg";
 import { useEffect, useRef, useState, useMemo } from "react";
