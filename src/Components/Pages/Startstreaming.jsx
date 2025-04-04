@@ -287,7 +287,6 @@
 
 // export default StartStreaming;
 
-
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Button, Card, Space, message, Typography, Input, Row, Col, List } from "antd";
@@ -302,8 +301,6 @@ import {
   VideoCameraOutlined as CameraOnIcon,
   VideoCameraAddOutlined as CameraOffIcon,
   DesktopOutlined,
-  LogoutOutlined,
-  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import socket from "../../socket";
 import "./Startstreaming.css";
@@ -316,17 +313,15 @@ const StartStreaming = () => {
   const chatEndRef = useRef(null);
 
   const [stream, setStream] = useState(null);
-  const [originalVideoTrack, setOriginalVideoTrack] = useState(null);
+  const originalVideoTrack = useRef(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamTitle, setStreamTitle] = useState("");
-  const [error, setError] = useState("");
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [isTabActive, setIsTabActive] = useState(true); // Track tab focus
 
   const peerConnectionRef = useRef(null);
   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
@@ -351,27 +346,14 @@ const StartStreaming = () => {
         peerConnectionRef.current.close();
       }
     };
-  }, []);
-
-  // Detect tab switching
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setIsTabActive(false);
-        message.warning("You switched tabs. Streaming may be affected!", 3);
-      } else {
-        setIsTabActive(true);
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []);
+  }, [stream]);
 
   const toggleFullScreen = () => {
     if (!isFullScreen && videoRef.current) {
-      videoRef.current.requestFullscreen();
-    } else {
+      if (videoRef.current.requestFullscreen) {
+        videoRef.current.requestFullscreen();
+      }
+    } else if (document.fullscreenElement) {
       document.exitFullscreen();
     }
     setIsFullScreen(!isFullScreen);
@@ -380,14 +362,14 @@ const StartStreaming = () => {
   const toggleMute = () => {
     if (stream) {
       stream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled));
-      setIsMuted(!isMuted);
+      setIsMuted((prev) => !prev);
     }
   };
 
   const toggleCamera = () => {
     if (stream) {
       stream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled));
-      setIsCameraOn(!isCameraOn);
+      setIsCameraOn((prev) => !prev);
     }
   };
 
@@ -401,27 +383,23 @@ const StartStreaming = () => {
 
       if (!sender) return;
 
-      if (!originalVideoTrack) {
-        setOriginalVideoTrack(stream.getVideoTracks()[0]);
+      if (!originalVideoTrack.current && stream) {
+        originalVideoTrack.current = stream.getVideoTracks()[0];
       }
 
       sender.replaceTrack(screenTrack);
-      videoRef.current.srcObject = new MediaStream([
-        screenTrack,
-        ...stream.getAudioTracks(),
-      ]);
+      videoRef.current.srcObject = new MediaStream([screenTrack, ...stream.getAudioTracks()]);
       setIsScreenSharing(true);
 
       screenTrack.onended = () => {
-        if (originalVideoTrack) {
-          sender.replaceTrack(originalVideoTrack);
+        if (originalVideoTrack.current) {
+          sender.replaceTrack(originalVideoTrack.current);
           videoRef.current.srcObject = stream;
         }
         setIsScreenSharing(false);
       };
     } catch (err) {
-      console.error("Error sharing screen:", err);
-      message.error("Screen sharing failed");
+      message.error("Screen sharing failed: " + err.message);
     }
   };
 
@@ -432,16 +410,16 @@ const StartStreaming = () => {
     }
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      videoRef.current.srcObject = mediaStream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
       setStream(mediaStream);
-      setOriginalVideoTrack(mediaStream.getVideoTracks()[0]);
+      originalVideoTrack.current = mediaStream.getVideoTracks()[0];
       setIsStreaming(true);
       message.success("Streaming started");
 
       peerConnectionRef.current = new RTCPeerConnection(servers);
-      mediaStream.getTracks().forEach((track) => {
-        peerConnectionRef.current.addTrack(track, mediaStream);
-      });
+      mediaStream.getTracks().forEach((track) => peerConnectionRef.current.addTrack(track, mediaStream));
 
       peerConnectionRef.current.onicecandidate = (event) => {
         if (event.candidate) {
@@ -451,13 +429,11 @@ const StartStreaming = () => {
 
       socket.emit("start-stream", {
         streamTitle,
-        streamerId: firebaseUser ? firebaseUser.uid : "Guest",
+        streamerId: firebaseUser?.uid || "Guest",
         streamerName: firebaseUser?.displayName || "Guest",
         profilePic: firebaseUser?.photoURL || null,
       });
     } catch (err) {
-      console.error("Stream start error:", err);
-      setError("Failed to access camera/mic.");
       message.error("Permission denied or no camera/mic available.");
     }
   };
@@ -472,33 +448,27 @@ const StartStreaming = () => {
     }
 
     setStream(null);
-    setOriginalVideoTrack(null);
+    originalVideoTrack.current = null;
     setIsStreaming(false);
     setIsCameraOn(true);
     setIsMuted(false);
     setIsScreenSharing(false);
-    videoRef.current.srcObject = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     message.info("Streaming stopped");
 
-    socket.emit("stop-stream", {
-      streamerId: firebaseUser ? firebaseUser.uid : "Guest",
-    });
-  };
-
-  const leaveStream = () => {
-    message.info("You have left the stream.");
-    window.location.href = "/"; // Redirect or handle accordingly
+    socket.emit("stop-stream", { streamerId: firebaseUser?.uid || "Guest" });
   };
 
   const sendMessage = () => {
     if (messageInput.trim()) {
-      const chatData = {
-        userId: firebaseUser ? firebaseUser.uid : "Guest",
-        username: firebaseUser ? firebaseUser.displayName : "Guest",
+      socket.emit("chat-message", {
+        userId: firebaseUser?.uid || "Guest",
+        username: firebaseUser?.displayName || "Guest",
         message: messageInput,
         time: new Date().toLocaleTimeString(),
-      };
-      socket.emit("chat-message", chatData);
+      });
       setMessageInput("");
     }
   };
@@ -507,22 +477,36 @@ const StartStreaming = () => {
     <Row justify="center" align="middle" className="start-streaming-container">
       <Col xs={24} md={16}>
         <Card bordered={false} className="stream-card">
-          <Title level={3} className="stream-title">
-            Start Live Streaming {isTabActive ? "" : <ExclamationCircleOutlined style={{ color: "red" }} />}
-          </Title>
-          <Space direction="vertical" size="large">
-            <Input
-              placeholder="Enter Stream Title"
-              value={streamTitle}
-              onChange={(e) => setStreamTitle(e.target.value)}
-            />
-            <video ref={videoRef} className="stream-video" autoPlay playsInline muted />
-            {isStreaming && (
-              <Button type="danger" icon={<LogoutOutlined />} onClick={leaveStream}>
-                Leave Stream
+          <Title level={3}>Start Live Streaming</Title>
+          <Input placeholder="Enter Stream Title" value={streamTitle} onChange={(e) => setStreamTitle(e.target.value)} />
+          <video ref={videoRef} className="stream-video" autoPlay playsInline muted />
+          <Space>
+            {!isStreaming ? (
+              <Button type="primary" icon={<VideoCameraOutlined />} onClick={startStream}>
+                Start Streaming
+              </Button>
+            ) : (
+              <Button type="danger" icon={<StopOutlined />} onClick={stopStream}>
+                Stop Streaming
               </Button>
             )}
+            <Button icon={isFullScreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />} onClick={toggleFullScreen} />
+            <Button icon={isMuted ? <SoundOutlined /> : <SoundFilled />} onClick={toggleMute} />
+            <Button icon={isCameraOn ? <CameraOnIcon /> : <CameraOffIcon />} onClick={toggleCamera} />
+            <Button icon={<DesktopOutlined />} onClick={toggleScreenShare}>
+              {isScreenSharing ? "Stop Sharing" : "Share Screen"}
+            </Button>
           </Space>
+          <List
+            className="chat-box"
+            dataSource={messages}
+            renderItem={(item) => <List.Item>{`${item.username}: ${item.message}`}</List.Item>}
+          />
+          <Space>
+            <Input value={messageInput} onChange={(e) => setMessageInput(e.target.value)} placeholder="Type a message" />
+            <Button icon={<SendOutlined />} onClick={sendMessage} />
+          </Space>
+          <div ref={chatEndRef} />
         </Card>
       </Col>
     </Row>
