@@ -1,0 +1,22 @@
+/* WatchStream.css */
+.watchstream-container {
+  margin: 20px;
+  padding: 20px;
+  background-color: #f7f7f7;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.watchstream-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.watchstream-video {
+  width: 100%;
+  max-height: 70vh;
+  background-color: #000;
+  border-radius: 4px;
+}
