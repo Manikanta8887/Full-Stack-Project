@@ -1,4 +1,4 @@
-
+// // Browse.jsx
 // import React, { useState, useEffect } from "react";
 // import { Card, Input, Row, Col, Typography, message } from "antd";
 // import { Link } from "react-router-dom";
@@ -62,7 +62,8 @@
 //         ) : (
 //           filteredLiveStreams.map((stream) => (
 //             <Col xs={24} sm={12} md={8} lg={6} key={stream.id}>
-//               <Link to={stream.streamLink || `/livestreamingplatform/stream/${stream.id}`}>
+//               {/* Updated link to redirect viewers to the watch page */}
+//               <Link to={stream.streamLink || `/livestreamingplatform/watch/${stream.id}`}>
 //                 <Card
 //                   hoverable
 //                   cover={
@@ -151,7 +152,6 @@ const Browse = () => {
     });
     socket.on("stop-stream", (endedStream) => {
       message.info(`"${endedStream.streamTitle}" has ended.`);
-      // Optionally update past streams here if needed.
     });
 
     return () => {
@@ -180,8 +180,8 @@ const Browse = () => {
         ) : (
           filteredLiveStreams.map((stream) => (
             <Col xs={24} sm={12} md={8} lg={6} key={stream.id}>
-              {/* Updated link to redirect viewers to the watch page */}
-              <Link to={stream.streamLink || `/livestreamingplatform/watch/${stream.id}`}>
+              {/* Link to viewer page */}
+              <Link to={`/livestreamingplatform/watch/${stream.id}`}>
                 <Card
                   hoverable
                   cover={
@@ -192,7 +192,8 @@ const Browse = () => {
                   }
                 >
                   <Card.Meta
-                    title={stream.streamTitle}
+                    // Display both Title and ID
+                    title={`${stream.streamTitle} (ID: ${stream.id})`}
                     description={`By ${stream.streamerName || stream.streamerId || "Unknown"}`}
                   />
                 </Card>
@@ -201,6 +202,7 @@ const Browse = () => {
           ))
         )}
       </Row>
+
       <Title level={3} style={{ marginTop: 30 }}>📺 Past Streams</Title>
       <Row gutter={[16, 16]}>
         {pastStreams.length === 0 ? (
@@ -218,7 +220,7 @@ const Browse = () => {
                 }
               >
                 <Card.Meta
-                  title={stream.streamTitle}
+                  title={`${stream.streamTitle} (ID: ${stream.id})`}
                   description={`By ${stream.streamerName || stream.streamerId || "Unknown"} on ${new Date(
                     stream.endTime
                   ).toLocaleDateString()}`}
