@@ -799,41 +799,58 @@ const StartStreaming = () => {
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
     }
-    socket.emit("stop-stream", { streamerId: firebaseUser ? firebaseUser.uid : "Guest" });
+    socket.emit("leave-stream", {
+      streamerId: firebaseUser ? firebaseUser.uid : "Guest",
+    });
+    localStorage.removeItem("activeStream");
     setIsStreaming(false);
     setStream(null);
-    localStorage.removeItem("activeStream");
-    navigate("/browse");
-    message.info("You left the stream.");
+    setStreamTitle("");
+    message.success("You have left the stream.");
+    navigate("/"); // Navigate to home or your desired page
   };
 
   const sendMessage = () => {
-    if (messageInput.trim()) {
-      socket.emit("send-chat-message", messageInput);
-      setMessageInput("");
-    }
+    if (!messageInput.trim()) return;
+    const msg = {
+      sender: firebaseUser ? firebaseUser.displayName || "Guest" : "Guest",
+      text: messageInput.trim(),
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    socket.emit("chat-message", msg);
+    setMessages((prev) => [...prev, msg]);
+    setMessageInput("");
   };
 
   const toggleFullScreen = () => {
-    if (!isFullScreen && videoRef.current) {
-      videoRef.current.requestFullscreen();
+    if (!isFullScreen) {
+      if (videoRef.current.requestFullscreen) {
+        videoRef.current.requestFullscreen();
+      }
+      setIsFullScreen(true);
     } else {
-      document.exitFullscreen();
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+      setIsFullScreen(false);
     }
-    setIsFullScreen(!isFullScreen);
   };
 
   const toggleMute = () => {
     if (stream) {
-      stream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled));
-      setIsMuted(!isMuted);
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setIsMuted((prev) => !prev);
     }
   };
 
   const toggleCamera = () => {
     if (stream) {
-      stream.getVideoTracks().forEach((track) => (track.enabled = !track.enabled));
-      setIsCameraOn(!isCameraOn);
+      stream.getVideoTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setIsCameraOn((prev) => !prev);
     }
   };
 
@@ -841,30 +858,25 @@ const StartStreaming = () => {
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
       const screenTrack = screenStream.getVideoTracks()[0];
+
       const sender = peerConnectionRef.current
-        ?.getSenders()
+        .getSenders()
         .find((s) => s.track.kind === "video");
 
-      if (!sender) return;
-
-      if (!originalVideoTrack) {
-        setOriginalVideoTrack(stream.getVideoTracks()[0]);
+      if (sender) {
+        sender.replaceTrack(screenTrack);
       }
 
-      sender.replaceTrack(screenTrack);
-      videoRef.current.srcObject = new MediaStream([screenTrack, ...stream.getAudioTracks()]);
-      setIsScreenSharing(true);
-
       screenTrack.onended = () => {
-        if (originalVideoTrack) {
+        if (originalVideoTrack && sender) {
           sender.replaceTrack(originalVideoTrack);
-          videoRef.current.srcObject = stream;
+          setIsScreenSharing(false);
         }
-        setIsScreenSharing(false);
       };
+
+      setIsScreenSharing(true);
     } catch (err) {
       console.error("Error sharing screen:", err);
-      message.error("Screen sharing failed");
     }
   };
 
