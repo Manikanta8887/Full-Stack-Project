@@ -574,7 +574,7 @@
 // StartStreaming.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { setIsStreaming, setStreamTitle } from "../../store/streamSlice";
+import { setIsStreaming, setStreamTitle } from "../../store/streamSlice.js";
 import { Button, Card, Space, message, Typography, Input, Row, Col, List } from "antd";
 import {
   VideoCameraOutlined,
