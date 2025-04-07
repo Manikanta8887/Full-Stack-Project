@@ -324,7 +324,9 @@ const Browse = () => {
           <p>No live streams available</p>
         ) : (
           filteredLiveStreams.map((stream) => {
+            // const streamLink = `/livestreamingplatform/watch/${stream.id}`;
             const streamLink = `/livestreamingplatform/watch/${stream.id}`;
+
             const fullLink = `${window.location.origin}${streamLink}`;
             return (
               <Col xs={24} sm={12} md={8} lg={6} key={stream.id}>

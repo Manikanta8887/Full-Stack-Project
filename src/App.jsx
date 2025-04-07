@@ -109,6 +109,7 @@ function App() {
           <Route path="/livestreamingplatform" element={<LiveStreamingPlatform />}>
             <Route index element={<StreamingContent />} />
             <Route path="stream/:id" element={<StartStreaming />} />
+            {/* <Route path="watch/:id" element={<WatchStream />} /> */}
             <Route path="watch/:id" element={<WatchStream />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
