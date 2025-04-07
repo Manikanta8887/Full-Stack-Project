@@ -38,6 +38,7 @@
 //   const [isMuted, setIsMuted] = useState(false);
 //   const [isCameraOn, setIsCameraOn] = useState(true);
 //   const [isScreenSharing, setIsScreenSharing] = useState(false);
+//   const [viewerCount, setViewerCount] = useState(0); // <-- viewer count state
 
 //   const peerConnectionRef = useRef(null);
 //   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
@@ -55,12 +56,20 @@
 //       }
 //     });
 
+//     socket.on("update-streams", (streams) => {
+//       const myStream = streams.find((s) => s.streamerId === firebaseUser?.uid);
+//       if (myStream) {
+//         setViewerCount(myStream.viewers || 0);
+//       }
+//     });
+
 //     return () => {
 //       socket.off("chat-message");
 //       socket.off("answer");
 //       socket.off("ice-candidate");
+//       socket.off("viewer-count");
 //     };
-//   }, []);
+//   }, [firebaseUser]);
 
 //   useEffect(() => {
 //     if (chatEndRef.current) {
@@ -194,6 +203,7 @@
 //     setIsCameraOn(true);
 //     setIsMuted(false);
 //     setIsScreenSharing(false);
+//     setViewerCount(0);
 //     if (videoRef.current) videoRef.current.srcObject = null;
 //     message.info("Streaming stopped");
 
@@ -220,7 +230,9 @@
 //     <Row justify="center" align="middle" className="start-streaming-container">
 //       <Col xs={24} md={16}>
 //         <Card bordered={false} className="stream-card">
-//           <Title level={3} className="stream-title">Start Live Streaming</Title>
+//           <Title level={3} className="stream-title">
+//             Start Live Streaming {isStreaming && `• ${viewerCount} watching`}
+//           </Title>
 //           <Space direction="vertical" size="large" className="stream-controls">
 //             <Input
 //               placeholder="Enter Stream Title"
@@ -296,6 +308,7 @@
 
 // export default StartStreaming;
 
+
 // StartStreaming.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -354,6 +367,7 @@ const StartStreaming = () => {
       }
     });
 
+    // Listen for updated streams to update viewer count
     socket.on("update-streams", (streams) => {
       const myStream = streams.find((s) => s.streamerId === firebaseUser?.uid);
       if (myStream) {
@@ -365,7 +379,7 @@ const StartStreaming = () => {
       socket.off("chat-message");
       socket.off("answer");
       socket.off("ice-candidate");
-      socket.off("viewer-count");
+      socket.off("update-streams"); // Updated cleanup
     };
   }, [firebaseUser]);
 
