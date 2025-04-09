@@ -1029,7 +1029,7 @@ import {
   DesktopOutlined,
 } from "@ant-design/icons";
 import socket from "../../socket";
-import "./StartStreaming.css";
+import "./Startstreaming.css";
 
 const { Title } = Typography;
 
