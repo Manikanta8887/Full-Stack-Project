@@ -32,8 +32,19 @@
 //       }
 //     });
 
+//     socket.on("stream-ended", () => {
+//       setError("The stream has ended.");
+//       if (videoRef.current) {
+//         videoRef.current.srcObject = null;
+//       }
+//       if (peerConnectionRef.current) {
+//         peerConnectionRef.current.close();
+//       }
+//     });
+
 //     return () => {
 //       socket.off("stream-info");
+//       socket.off("stream-ended");
 //       if (peerConnectionRef.current) {
 //         peerConnectionRef.current.close();
 //       }
@@ -86,7 +97,7 @@
 //     if (messageInput.trim()) {
 //       const chatData = {
 //         streamId: id,
-//         userId: "Viewer", // Replace with actual user data if available
+//         userId: "Viewer",
 //         username: "Viewer",
 //         message: messageInput,
 //         time: new Date().toLocaleTimeString(),
@@ -105,7 +116,7 @@
 
 //   return (
 //     <Card style={{ margin: "20px" }}>
-//       {streamInfo ? (
+//       {streamInfo && !error ? (
 //         <>
 //           <Title level={3}>{streamInfo.streamTitle}</Title>
 
@@ -167,7 +178,6 @@
 // export default WatchStream;
 
 
-
 // WatchStream.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -196,7 +206,7 @@ const WatchStream = () => {
       if (data) {
         setStreamInfo(data);
         message.success(`Joined stream: ${data.streamTitle}`);
-        setupPeerConnection();
+        setupPeerConnection(); // Now safe to join and handle offer
       } else {
         setError("Stream not found or ended.");
       }
@@ -212,9 +222,12 @@ const WatchStream = () => {
       }
     });
 
+    // Cleanup
     return () => {
       socket.off("stream-info");
       socket.off("stream-ended");
+      socket.off("offer");
+      socket.off("ice-candidate");
       if (peerConnectionRef.current) {
         peerConnectionRef.current.close();
       }
@@ -230,22 +243,36 @@ const WatchStream = () => {
       }
     };
 
+    peerConnectionRef.current.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", {
+          streamId: id,
+          candidate: event.candidate,
+        });
+      }
+    };
+
+    // These must be outside any conditional blocks to avoid missing early signals
     socket.on("offer", async (offer) => {
       if (peerConnectionRef.current) {
-        await peerConnectionRef.current.setRemoteDescription(offer);
-        const answer = await peerConnectionRef.current.createAnswer();
-        await peerConnectionRef.current.setLocalDescription(answer);
-        socket.emit("answer", { streamId: id, answer });
+        try {
+          await peerConnectionRef.current.setRemoteDescription(offer);
+          const answer = await peerConnectionRef.current.createAnswer();
+          await peerConnectionRef.current.setLocalDescription(answer);
+          socket.emit("answer", { streamId: id, answer });
+        } catch (err) {
+          console.error("Failed to handle offer:", err);
+        }
       }
     });
 
     socket.on("ice-candidate", async (candidate) => {
-      if (peerConnectionRef.current) {
-        try {
+      try {
+        if (peerConnectionRef.current) {
           await peerConnectionRef.current.addIceCandidate(candidate);
-        } catch (err) {
-          console.error("Error adding received ICE candidate", err);
         }
+      } catch (err) {
+        console.error("Error adding received ICE candidate", err);
       }
     });
 
