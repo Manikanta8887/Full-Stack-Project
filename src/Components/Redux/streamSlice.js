@@ -1,9 +1,9 @@
-// // store/streamSlice.js
+// // Redux/streamSlice.js
 // import { createSlice } from "@reduxjs/toolkit";
 
 // const initialState = {
-//   isStreaming: false,
-//   streamTitle: "",
+//   isStreaming: localStorage.getItem("isStreaming") === "true",
+//   streamTitle: localStorage.getItem("streamTitle") || "",
 // };
 
 // const streamSlice = createSlice({
@@ -12,9 +12,11 @@
 //   reducers: {
 //     setIsStreaming: (state, action) => {
 //       state.isStreaming = action.payload;
+//       localStorage.setItem("isStreaming", action.payload);
 //     },
 //     setStreamTitle: (state, action) => {
 //       state.streamTitle = action.payload;
+//       localStorage.setItem("streamTitle", action.payload);
 //     },
 //   },
 // });
@@ -37,11 +39,13 @@ const streamSlice = createSlice({
   reducers: {
     setIsStreaming: (state, action) => {
       state.isStreaming = action.payload;
-      localStorage.setItem("isStreaming", action.payload);
+      if (action.payload) localStorage.setItem("isStreaming", "true");
+      else localStorage.removeItem("isStreaming");
     },
     setStreamTitle: (state, action) => {
       state.streamTitle = action.payload;
-      localStorage.setItem("streamTitle", action.payload);
+      if (action.payload) localStorage.setItem("streamTitle", action.payload);
+      else localStorage.removeItem("streamTitle");
     },
   },
 });

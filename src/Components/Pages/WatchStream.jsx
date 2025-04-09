@@ -26,7 +26,7 @@
 //       if (data) {
 //         setStreamInfo(data);
 //         message.success(`Joined stream: ${data.streamTitle}`);
-//         setupPeerConnection();
+//         setupPeerConnection(); // Now safe to join and handle offer
 //       } else {
 //         setError("Stream not found or ended.");
 //       }
@@ -42,9 +42,12 @@
 //       }
 //     });
 
+//     // Cleanup
 //     return () => {
 //       socket.off("stream-info");
 //       socket.off("stream-ended");
+//       socket.off("offer");
+//       socket.off("ice-candidate");
 //       if (peerConnectionRef.current) {
 //         peerConnectionRef.current.close();
 //       }
@@ -60,22 +63,36 @@
 //       }
 //     };
 
+//     peerConnectionRef.current.onicecandidate = (event) => {
+//       if (event.candidate) {
+//         socket.emit("ice-candidate", {
+//           streamId: id,
+//           candidate: event.candidate,
+//         });
+//       }
+//     };
+
+//     // These must be outside any conditional blocks to avoid missing early signals
 //     socket.on("offer", async (offer) => {
 //       if (peerConnectionRef.current) {
-//         await peerConnectionRef.current.setRemoteDescription(offer);
-//         const answer = await peerConnectionRef.current.createAnswer();
-//         await peerConnectionRef.current.setLocalDescription(answer);
-//         socket.emit("answer", { streamId: id, answer });
+//         try {
+//           await peerConnectionRef.current.setRemoteDescription(offer);
+//           const answer = await peerConnectionRef.current.createAnswer();
+//           await peerConnectionRef.current.setLocalDescription(answer);
+//           socket.emit("answer", { streamId: id, answer });
+//         } catch (err) {
+//           console.error("Failed to handle offer:", err);
+//         }
 //       }
 //     });
 
 //     socket.on("ice-candidate", async (candidate) => {
-//       if (peerConnectionRef.current) {
-//         try {
+//       try {
+//         if (peerConnectionRef.current) {
 //           await peerConnectionRef.current.addIceCandidate(candidate);
-//         } catch (err) {
-//           console.error("Error adding received ICE candidate", err);
 //         }
+//       } catch (err) {
+//         console.error("Error adding received ICE candidate", err);
 //       }
 //     });
 
@@ -206,7 +223,7 @@ const WatchStream = () => {
       if (data) {
         setStreamInfo(data);
         message.success(`Joined stream: ${data.streamTitle}`);
-        setupPeerConnection(); // Now safe to join and handle offer
+        setupPeerConnection();
       } else {
         setError("Stream not found or ended.");
       }
@@ -222,7 +239,6 @@ const WatchStream = () => {
       }
     });
 
-    // Cleanup
     return () => {
       socket.off("stream-info");
       socket.off("stream-ended");
@@ -252,7 +268,7 @@ const WatchStream = () => {
       }
     };
 
-    // These must be outside any conditional blocks to avoid missing early signals
+    // Listen for offer and ICE candidates
     socket.on("offer", async (offer) => {
       if (peerConnectionRef.current) {
         try {
@@ -285,9 +301,7 @@ const WatchStream = () => {
   }, []);
 
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const sendMessage = () => {
@@ -328,13 +342,7 @@ const WatchStream = () => {
             </Tooltip>
           </div>
 
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            controls
-            style={{ width: "100%", backgroundColor: "#000" }}
-          />
+          <video ref={videoRef} autoPlay playsInline controls style={{ width: "100%", backgroundColor: "#000" }} />
 
           <Card className="watch-chat-box" style={{ marginTop: 20 }}>
             <Title level={4} className="chat-title">Live Chat</Title>
@@ -344,9 +352,7 @@ const WatchStream = () => {
               renderItem={(msg, index) => (
                 <List.Item key={index}>
                   <strong>{msg.username}</strong>: {msg.message}
-                  <em style={{ fontSize: "0.8em", color: "#999", marginLeft: "5px" }}>
-                    {msg.time}
-                  </em>
+                  <em style={{ fontSize: "0.8em", color: "#999", marginLeft: "5px" }}>{msg.time}</em>
                 </List.Item>
               )}
             />
