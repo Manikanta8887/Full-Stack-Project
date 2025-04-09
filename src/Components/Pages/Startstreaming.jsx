@@ -477,6 +477,9 @@ const StartStreaming = () => {
       mediaStream.getTracks().forEach((track) => {
         peerConnectionRef.current.addTrack(track, mediaStream);
       });
+
+      console.log("STREAMER: Created offer:", offer);
+      console.log("STREAMER: Emitting offer with streamId:", firebaseUser?.uid);
       peerConnectionRef.current.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit("ice-candidate", {

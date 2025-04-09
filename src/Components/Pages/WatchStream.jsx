@@ -251,6 +251,8 @@ const WatchStream = () => {
   }, [id]);
 
   const setupPeerConnection = () => {
+    console.log("VIEWER: joining stream room with ID:", id);
+
     peerConnectionRef.current = new RTCPeerConnection(servers);
 
     peerConnectionRef.current.ontrack = (event) => {
@@ -258,6 +260,8 @@ const WatchStream = () => {
         videoRef.current.srcObject = event.streams[0];
       }
     };
+
+
 
     peerConnectionRef.current.onicecandidate = (event) => {
       if (event.candidate) {
@@ -270,6 +274,7 @@ const WatchStream = () => {
 
     // Listen for offer and ICE candidates
     socket.on("offer", async (offer) => {
+      console.log("VIEWER: Received offer for streamId:", id, "Offer:", offer);
       if (peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.setRemoteDescription(offer);
@@ -283,6 +288,7 @@ const WatchStream = () => {
     });
 
     socket.on("ice-candidate", async (candidate) => {
+      console.log("VIEWER: Received ICE candidate:", candidate);
       try {
         if (peerConnectionRef.current) {
           await peerConnectionRef.current.addIceCandidate(candidate);
