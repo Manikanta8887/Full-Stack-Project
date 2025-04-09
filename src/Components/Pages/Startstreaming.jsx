@@ -1052,11 +1052,11 @@ const StartStreaming = () => {
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const peerConnectionRef = useRef(null);
   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-  // Sync redux state with localStorage
   const isStreaming = reduxStreaming || localStorage.getItem("isStreaming") === "true";
   const streamTitle = reduxTitle || localStorage.getItem("streamTitle") || "";
 
@@ -1070,7 +1070,6 @@ const StartStreaming = () => {
     else localStorage.removeItem("streamTitle");
   }, [reduxTitle]);
 
-  // Socket listeners
   useEffect(() => {
     socket.on("chat-message", (msg) => setMessages((prev) => [...prev, msg]));
     socket.on("answer", async ({ answer }) => {
@@ -1085,9 +1084,7 @@ const StartStreaming = () => {
     });
     socket.on("update-streams", (streams) => {
       const myStream = streams.find((s) => s.streamerId === firebaseUser?.uid);
-      if (myStream) {
-        setViewerCount(myStream.viewers || 0);
-      }
+      if (myStream) setViewerCount(myStream.viewers || 0);
     });
     socket.on("stream-info", (data) => {
       if (data) {
@@ -1179,6 +1176,7 @@ const StartStreaming = () => {
       sender.replaceTrack(screenTrack);
       videoRef.current.srcObject = new MediaStream([screenTrack, ...stream.getAudioTracks()]);
       setIsScreenSharing(true);
+      message.success("Screen sharing started");
 
       screenTrack.onended = () => {
         if (originalVideoTrack) {
@@ -1198,6 +1196,7 @@ const StartStreaming = () => {
       return message.warning("Please enter a stream title.");
     }
     try {
+      setIsLoading(true);
       const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       videoRef.current.srcObject = mediaStream;
       setStream(mediaStream);
@@ -1212,7 +1211,7 @@ const StartStreaming = () => {
       peerConnectionRef.current.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit("ice-candidate", {
-            streamId: firebaseUser.uid,
+            streamId: firebaseUser?.uid || "Guest",
             candidate: event.candidate,
           });
         }
@@ -1221,7 +1220,7 @@ const StartStreaming = () => {
       const offer = await peerConnectionRef.current.createOffer();
       await peerConnectionRef.current.setLocalDescription(offer);
 
-      socket.emit("offer", { streamId: firebaseUser.uid, offer });
+      socket.emit("offer", { streamId: firebaseUser?.uid || "Guest", offer });
       socket.emit("start-stream", {
         streamTitle,
         streamerId: firebaseUser?.uid || "Guest",
@@ -1232,6 +1231,8 @@ const StartStreaming = () => {
       console.error("Stream start error:", err);
       setError("Failed to access camera/mic.");
       message.error("Permission denied or no camera/mic available.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -1254,11 +1255,11 @@ const StartStreaming = () => {
     if (!silent) message.info("Streaming stopped");
 
     socket.emit("stop-stream", {
-      streamerId: firebaseUser ? firebaseUser.uid : "Guest",
+      streamerId: firebaseUser?.uid || "Guest",
     });
   };
 
-  const sendMessage = () => {
+  const sendMessage = useCallback(() => {
     if (messageInput.trim()) {
       const chatData = {
         streamId: firebaseUser?.uid || "Guest",
@@ -1269,8 +1270,9 @@ const StartStreaming = () => {
       };
       socket.emit("chat-message", chatData);
       setMessageInput("");
+      // message.success("Message sent"); // Optional
     }
-  };
+  }, [messageInput, firebaseUser]);
 
   return (
     <Row justify="center" gutter={[16, 16]} className="start-streaming-container">
@@ -1285,12 +1287,20 @@ const StartStreaming = () => {
               value={streamTitle}
               onChange={(e) => dispatch(setStreamTitle(e.target.value))}
               size="large"
+              disabled={!firebaseUser}
             />
             <video ref={videoRef} className="stream-video" autoPlay playsInline muted />
             {error && <p className="error-text">{error}</p>}
             <Space wrap>
               {!isStreaming ? (
-                <Button type="primary" icon={<VideoCameraOutlined />} size="large" onClick={startStream}>
+                <Button
+                  type="primary"
+                  icon={<VideoCameraOutlined />}
+                  size="large"
+                  onClick={startStream}
+                  loading={isLoading}
+                  disabled={!firebaseUser}
+                >
                   Start Streaming
                 </Button>
               ) : (
