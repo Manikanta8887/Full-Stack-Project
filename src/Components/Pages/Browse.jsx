@@ -156,11 +156,11 @@
 
 // export default Browse;
 
-// Browse.jsx
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, Input, Row, Col, Typography, message, Button, Tooltip, Space } from "antd";
 import { Link } from "react-router-dom";
-import { CopyOutlined, UserOutlined } from "@ant-design/icons";
+import { CopyOutlined } from "@ant-design/icons";
 import socket from "../../socket";
 import "./Browse.css";
 
@@ -173,20 +173,26 @@ const Browse = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    // Emit socket event to get live and past streams
     socket.emit("get-streams");
+
     socket.on("stream-list", (data) => {
-      setLiveStreams(data.liveStreams);
-      setPastStreams(data.pastStreams);
+      setLiveStreams(data.liveStreams);  // Update live streams
+      setPastStreams(data.pastStreams);  // Update past streams
     });
+
     socket.on("update-streams", (streams) => {
-      setLiveStreams(streams);
+      setLiveStreams(streams);  // Update live streams in case of changes
     });
+
     socket.on("start-stream", (newStream) => {
       message.success(`"${newStream.streamTitle}" is now live!`);
     });
     socket.on("stop-stream", (endedStream) => {
       message.info(`"${endedStream.streamTitle}" has ended.`);
     });
+
+    // Clean up socket events
     return () => {
       socket.off("stream-list");
       socket.off("update-streams");
