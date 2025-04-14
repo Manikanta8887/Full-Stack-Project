@@ -174,23 +174,19 @@ const Browse = () => {
 
   useEffect(() => {
     socket.emit("get-streams");
-
     socket.on("stream-list", (data) => {
       setLiveStreams(data.liveStreams);
       setPastStreams(data.pastStreams);
     });
-
     socket.on("update-streams", (streams) => {
       setLiveStreams(streams);
     });
-
     socket.on("start-stream", (newStream) => {
       message.success(`"${newStream.streamTitle}" is now live!`);
     });
     socket.on("stop-stream", (endedStream) => {
       message.info(`"${endedStream.streamTitle}" has ended.`);
     });
-
     return () => {
       socket.off("stream-list");
       socket.off("update-streams");
