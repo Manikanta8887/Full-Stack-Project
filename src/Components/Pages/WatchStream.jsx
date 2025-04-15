@@ -546,7 +546,6 @@ const WatchStream = () => {
       setMessageInput("");
     }
   };
-
   const handleCopyLink = () => {
     const fullLink = `${window.location.origin}/livestreamingplatform/watch/${id}`;
     navigator.clipboard.writeText(fullLink).then(() => {
