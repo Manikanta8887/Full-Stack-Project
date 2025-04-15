@@ -602,6 +602,7 @@ const WatchStream = () => {
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
                 onPressEnter={sendMessage}
+                autoComplete="off"
               />
               <Button type="primary" icon={<SendOutlined />} onClick={sendMessage} />
             </Space.Compact>

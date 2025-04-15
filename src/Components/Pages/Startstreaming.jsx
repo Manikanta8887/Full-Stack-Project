@@ -1048,12 +1048,14 @@ const StartStreaming = () => {
             Start Live Streaming {isStreaming && `• ${viewerCount} watching`}
           </Title>
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            {/* Added autoComplete="off" for the stream title input */}
             <Input
               placeholder="Enter Stream Title"
               value={streamTitle}
               onChange={(e) => dispatch(setStreamTitle(e.target.value))}
               size="large"
               disabled={!firebaseUser}
+              autoComplete="off"
             />
             <video ref={videoRef} className="stream-video" autoPlay playsInline muted />
             {error && <p className="error-text">{error}</p>}
@@ -1119,6 +1121,7 @@ const StartStreaming = () => {
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
                 onPressEnter={sendMessage}
+                autoComplete="off"
               />
               <Button type="primary" icon={<SendOutlined />} onClick={sendMessage} />
             </Space.Compact>
