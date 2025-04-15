@@ -433,7 +433,9 @@ const WatchStream = () => {
 
     socket.on("stream-ended", () => {
       setError("The stream has ended.");
-      if (videoRef.current) videoRef.current.srcObject = null;
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
       if (peerConnectionRef.current) {
         peerConnectionRef.current.close();
         peerConnectionRef.current = null;
@@ -456,12 +458,14 @@ const WatchStream = () => {
     console.log("VIEWER: Joining stream room with ID:", id);
     peerConnectionRef.current = new RTCPeerConnection(servers);
 
+    // When tracks are received, set them as the video source.
     peerConnectionRef.current.ontrack = (event) => {
       if (videoRef.current) {
         videoRef.current.srcObject = event.streams[0];
       }
     };
 
+    // Send ICE candidates to streamer
     peerConnectionRef.current.onicecandidate = (event) => {
       if (event.candidate) {
         socket.emit("ice-candidate", {
@@ -471,7 +475,7 @@ const WatchStream = () => {
       }
     };
 
-    // Listen for offer and exchange answer
+    // Listen for offer from streamer
     socket.on("offer", async (offer) => {
       console.log("VIEWER: Received offer for streamId:", id, "Offer:", offer);
       if (peerConnectionRef.current) {

@@ -753,7 +753,6 @@
 
 // export default StartStreaming;
 
-
 // StartStreaming.jsx
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -762,7 +761,6 @@ import { Button, Card, Space, message, Typography, Input, Row, Col, List } from 
 import {
   VideoCameraOutlined,
   StopOutlined,
-  // Make sure to import SendOutlined as well:
   SendOutlined,
   FullscreenOutlined,
   FullscreenExitOutlined,
@@ -783,7 +781,7 @@ const StartStreaming = () => {
   const reduxStreaming = useSelector((state) => state.stream.isStreaming);
   const reduxTitle = useSelector((state) => state.stream.streamTitle);
 
-  // Use Redux state or fallback to localStorage values for persistence
+  // Use Redux or localStorage fallback for persistence
   const isStreaming = reduxStreaming || localStorage.getItem("isStreaming") === "true";
   const streamTitle = reduxTitle || localStorage.getItem("streamTitle") || "";
 
@@ -803,9 +801,10 @@ const StartStreaming = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const peerConnectionRef = useRef(null);
+  // Using a public STUN server; add TURN servers as needed for production
   const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-  // Store redux streaming state to localStorage
+  // Synchronize Redux state changes into localStorage
   useEffect(() => {
     if (reduxStreaming) localStorage.setItem("isStreaming", "true");
     else localStorage.removeItem("isStreaming");
@@ -816,26 +815,25 @@ const StartStreaming = () => {
     else localStorage.removeItem("streamTitle");
   }, [reduxTitle]);
 
-  // Socket event listeners for signaling and chat
+  // SOCKET: Set up signaling listeners
   useEffect(() => {
     socket.on("chat-message", (msg) => setMessages((prev) => [...prev, msg]));
     socket.on("answer", async ({ answer }) => {
-      if (peerConnectionRef.current) {
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-      }
+      console.log("STREAMER: Received answer", answer);
+      await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(answer));
     });
     socket.on("ice-candidate", async ({ candidate }) => {
       try {
-        if (peerConnectionRef.current) {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        }
+        await peerConnectionRef.current?.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (e) {
         console.error("Error adding ICE candidate:", e);
       }
     });
     socket.on("update-streams", (streams) => {
       const myStream = streams.find((s) => s.streamerId === firebaseUser?.uid);
-      if (myStream) setViewerCount(myStream.viewers || 0);
+      if (myStream) {
+        setViewerCount(myStream.viewers || 0);
+      }
     });
     socket.on("stream-info", (data) => {
       if (data) {
@@ -853,63 +851,45 @@ const StartStreaming = () => {
   }, [firebaseUser]);
 
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Rejoin logic on refresh: delay stopping the stream (5 seconds) to allow rejoin.
+  // Rejoin logic on refresh: if streaming is flagged but no peerConnection exists, attempt to rejoin.
   useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (isStreaming) {
-        e.preventDefault();
-        e.returnValue = "";
-        // Schedule a silent stop if not rejoined within 5 seconds
-        setTimeout(() => {
-          stopStream(true);
-        }, 5000);
+    const rejoinStream = async () => {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        videoRef.current.srcObject = mediaStream;
+        setStream(mediaStream);
+        setOriginalVideoTrack(mediaStream.getVideoTracks()[0]);
+        peerConnectionRef.current = new RTCPeerConnection(servers);
+        mediaStream.getTracks().forEach((track) => {
+          peerConnectionRef.current.addTrack(track, mediaStream);
+        });
+        peerConnectionRef.current.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.emit("ice-candidate", {
+              streamId: firebaseUser?.uid,
+              candidate: event.candidate,
+            });
+          }
+        };
+        socket.emit("rejoin-stream", { streamerId: firebaseUser?.uid });
+        message.success("Rejoined the stream after refresh.");
+      } catch (err) {
+        console.error("Rejoin error:", err);
+        message.error("Failed to rejoin stream after refresh.");
       }
     };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [isStreaming]);
 
-  // Rejoin stream on refresh
-  const rejoinStream = useCallback(async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      videoRef.current.srcObject = mediaStream;
-      setStream(mediaStream);
-      setOriginalVideoTrack(mediaStream.getVideoTracks()[0]);
-      peerConnectionRef.current = new RTCPeerConnection(servers);
-      mediaStream.getTracks().forEach((track) => peerConnectionRef.current.addTrack(track, mediaStream));
-      peerConnectionRef.current.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit("ice-candidate", {
-            streamId: firebaseUser?.uid,
-            candidate: event.candidate,
-          });
-        }
-      };
-      socket.emit("rejoin-stream", { streamerId: firebaseUser?.uid });
-      message.success("Rejoined the stream after refresh.");
-    } catch (err) {
-      console.error("Rejoin error:", err);
-      message.error("Failed to rejoin stream after refresh.");
-    }
-  }, [firebaseUser, servers]);
-
-  useEffect(() => {
     if (isStreaming && !peerConnectionRef.current) {
       dispatch(setIsStreaming(true));
       dispatch(setStreamTitle(streamTitle));
       rejoinStream();
     }
-  }, [isStreaming, streamTitle, dispatch, rejoinStream]);
+  }, [isStreaming, streamTitle, dispatch, firebaseUser, servers]);
 
-  // UI Controls
+  // UI control functions
   const toggleFullScreen = () => {
     if (!isFullScreen && videoRef.current) {
       videoRef.current.requestFullscreen();
@@ -959,6 +939,7 @@ const StartStreaming = () => {
     }
   };
 
+  // Start stream: get user media, create PeerConnection, create and send offer, and emit start-stream event.
   const startStream = async () => {
     if (!streamTitle.trim()) {
       return message.warning("Please enter a stream title.");
@@ -974,7 +955,10 @@ const StartStreaming = () => {
       message.success("Streaming started");
 
       peerConnectionRef.current = new RTCPeerConnection(servers);
-      mediaStream.getTracks().forEach((track) => peerConnectionRef.current.addTrack(track, mediaStream));
+      mediaStream.getTracks().forEach((track) => {
+        peerConnectionRef.current.addTrack(track, mediaStream);
+      });
+
       peerConnectionRef.current.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit("ice-candidate", {
@@ -1004,6 +988,7 @@ const StartStreaming = () => {
     }
   };
 
+  // Stop stream: close media tracks, close PeerConnection, update state and notify backend.
   const stopStream = () => {
     stream?.getTracks().forEach((track) => track.stop());
     peerConnectionRef.current?.close();
