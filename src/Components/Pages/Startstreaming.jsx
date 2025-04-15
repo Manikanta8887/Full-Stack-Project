@@ -384,6 +384,7 @@ import { setIsStreaming, setStreamTitle } from "../Redux/streamSlice.js";
 import { Button, Card, Space, message, Typography, Input, Row, Col, List } from "antd";
 import {
   VideoCameraOutlined,
+  SendOutlined,
   StopOutlined,
   FullscreenOutlined,
   FullscreenExitOutlined,
