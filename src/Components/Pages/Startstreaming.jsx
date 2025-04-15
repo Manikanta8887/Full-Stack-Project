@@ -801,8 +801,24 @@ const StartStreaming = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const peerConnectionRef = useRef(null);
-  // Using a public STUN server; add TURN servers as needed for production
-  const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+  // Updated ICE servers using Xirsys TURN/STUN configuration
+  const servers = {
+    iceServers: [
+      {
+        urls: "stun:global.xirsys.net",
+      },
+      {
+        urls: "turn:global.xirsys.net:3478?transport=udp",
+        username: "Manikanta",
+        credential: "786edebc-19dc-11f0-8c4a-0242ac130003",
+      },
+      {
+        urls: "turn:global.xirsys.net:3478?transport=tcp",
+        username: "Manikanta",
+        credential: "786edebc-19dc-11f0-8c4a-0242ac130003",
+      },
+    ],
+  };
 
   // Synchronize Redux state changes into localStorage
   useEffect(() => {
