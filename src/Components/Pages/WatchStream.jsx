@@ -640,12 +640,10 @@ const WatchStream = () => {
   const [messageInput, setMessageInput] = useState("");
   const peerConnectionRef = useRef(null);
 
-  // Updated ICE servers using Xirsys TURN/STUN configuration
+  // ICE server configuration
   const servers = {
     iceServers: [
-      {
-        urls: "stun:global.xirsys.net",
-      },
+      { urls: "stun:global.xirsys.net" },
       {
         urls: "turn:global.xirsys.net:3478?transport=udp",
         username: "Manikanta",
@@ -674,9 +672,7 @@ const WatchStream = () => {
 
     socket.on("stream-ended", () => {
       setError("The stream has ended.");
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
+      if (videoRef.current) videoRef.current.srcObject = null;
       if (peerConnectionRef.current) {
         peerConnectionRef.current.close();
         peerConnectionRef.current = null;
@@ -689,6 +685,7 @@ const WatchStream = () => {
       socket.off("stream-ended");
       socket.off("offer");
       socket.off("ice-candidate");
+      socket.off("chat-message");
       if (peerConnectionRef.current) {
         peerConnectionRef.current.close();
         peerConnectionRef.current = null;
@@ -700,9 +697,23 @@ const WatchStream = () => {
     console.log("VIEWER: Joining stream room with ID:", id);
     peerConnectionRef.current = new RTCPeerConnection(servers);
 
-    // When tracks are received, set them as the video source.
+    // Log ICE connection state changes for debugging
+    peerConnectionRef.current.oniceconnectionstatechange = () => {
+      console.log("ICE connection state change:", peerConnectionRef.current.iceConnectionState);
+      // Optionally display state to the user or trigger reconnection attempts on failure.
+    };
+
+    // Log overall connection state if available
+    peerConnectionRef.current.onconnectionstatechange = () => {
+      console.log("Connection state change:", peerConnectionRef.current.connectionState);
+    };
+
+    // When remote tracks are received, assign them to the video element
     peerConnectionRef.current.ontrack = (event) => {
+      console.log("Received track event:", event);
       if (videoRef.current) {
+        // Log the stream to check available tracks
+        console.log("Stream tracks received:", event.streams[0].getTracks());
         videoRef.current.srcObject = event.streams[0];
       }
     };
@@ -710,6 +721,7 @@ const WatchStream = () => {
     // Send ICE candidates to streamer
     peerConnectionRef.current.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log("Sending ICE candidate:", event.candidate);
         socket.emit("ice-candidate", {
           streamId: id,
           candidate: event.candidate,
@@ -717,7 +729,7 @@ const WatchStream = () => {
       }
     };
 
-    // Listen for offer from streamer and destructure the 'offer' property from the payload.
+    // Listen for offer from streamer and properly destructure the offer property
     socket.on("offer", async ({ offer }) => {
       console.log("VIEWER: Received offer for streamId:", id, "Offer:", offer);
       if (peerConnectionRef.current) {
@@ -725,6 +737,7 @@ const WatchStream = () => {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await peerConnectionRef.current.createAnswer();
           await peerConnectionRef.current.setLocalDescription(answer);
+          console.log("VIEWER: Sending answer for streamId:", id, "Answer:", answer);
           socket.emit("answer", { streamId: id, answer });
         } catch (err) {
           console.error("Failed to handle offer:", err);
@@ -732,7 +745,7 @@ const WatchStream = () => {
       }
     });
 
-    // Listen for ICE candidates from streamer and destructure the 'candidate' property.
+    // Listen for ICE candidates from streamer and destructure the candidate property
     socket.on("ice-candidate", async ({ candidate }) => {
       console.log("VIEWER: Received ICE candidate:", candidate);
       try {
