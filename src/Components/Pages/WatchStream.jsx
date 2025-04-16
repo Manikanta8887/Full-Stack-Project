@@ -497,7 +497,7 @@ const WatchStream = () => {
       console.log("VIEWER: Received offer for streamId:", id, "Offer:", offer);
       if (peerConnectionRef.current) {
         try {
-          await peerConnectionRef.current.setRemoteDescription(offer);
+          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
           const answer = await peerConnectionRef.current.createAnswer();
           await peerConnectionRef.current.setLocalDescription(answer);
           socket.emit("answer", { streamId: id, answer });
@@ -512,7 +512,7 @@ const WatchStream = () => {
       console.log("VIEWER: Received ICE candidate:", candidate);
       try {
         if (peerConnectionRef.current) {
-          await peerConnectionRef.current.addIceCandidate(candidate);
+          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
         }
       } catch (err) {
         console.error("Error adding received ICE candidate", err);
@@ -546,6 +546,7 @@ const WatchStream = () => {
       setMessageInput("");
     }
   };
+
   const handleCopyLink = () => {
     const fullLink = `${window.location.origin}/livestreamingplatform/watch/${id}`;
     navigator.clipboard.writeText(fullLink).then(() => {
