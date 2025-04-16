@@ -620,6 +620,7 @@
 
 // export default WatchStream;
 
+
 // WatchStream.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -640,7 +641,6 @@ const WatchStream = () => {
   const [messageInput, setMessageInput] = useState("");
   const peerConnectionRef = useRef(null);
 
-  // ICE server configuration
   const servers = {
     iceServers: [
       { urls: "stun:global.xirsys.net" },
@@ -658,13 +658,15 @@ const WatchStream = () => {
   };
 
   useEffect(() => {
+    // Emit first so streamer can send offer
+    socket.emit("join-stream", { streamId: id });
     socket.emit("get-stream-info", { streamId: id });
 
     socket.on("stream-info", (data) => {
       if (data) {
         setStreamInfo(data);
         message.success(`Joined stream: ${data.streamTitle}`);
-        setupPeerConnection(); // Initiate WebRTC connection
+        setupPeerConnection();
       } else {
         setError("Stream not found or ended.");
       }
@@ -679,7 +681,6 @@ const WatchStream = () => {
       }
     });
 
-    // Clean up socket events when component unmounts
     return () => {
       socket.off("stream-info");
       socket.off("stream-ended");
@@ -694,34 +695,27 @@ const WatchStream = () => {
   }, [id]);
 
   const setupPeerConnection = () => {
-    console.log("VIEWER: Joining stream room with ID:", id);
+    console.log("VIEWER: Setting up PeerConnection for streamId:", id);
     peerConnectionRef.current = new RTCPeerConnection(servers);
 
-    // Log ICE connection state changes for debugging
     peerConnectionRef.current.oniceconnectionstatechange = () => {
-      console.log("ICE connection state change:", peerConnectionRef.current.iceConnectionState);
-      // Optionally display state to the user or trigger reconnection attempts on failure.
+      console.log("ICE connection state:", peerConnectionRef.current.iceConnectionState);
     };
 
-    // Log overall connection state if available
     peerConnectionRef.current.onconnectionstatechange = () => {
-      console.log("Connection state change:", peerConnectionRef.current.connectionState);
+      console.log("Overall connection state:", peerConnectionRef.current.connectionState);
     };
 
-    // When remote tracks are received, assign them to the video element
     peerConnectionRef.current.ontrack = (event) => {
-      console.log("Received track event:", event);
+      console.log("Received track:", event.streams[0]);
       if (videoRef.current) {
-        // Log the stream to check available tracks
-        console.log("Stream tracks received:", event.streams[0].getTracks());
         videoRef.current.srcObject = event.streams[0];
       }
     };
 
-    // Send ICE candidates to streamer
     peerConnectionRef.current.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log("Sending ICE candidate:", event.candidate);
+        console.log("VIEWER: Sending ICE candidate:", event.candidate);
         socket.emit("ice-candidate", {
           streamId: id,
           candidate: event.candidate,
@@ -729,35 +723,30 @@ const WatchStream = () => {
       }
     };
 
-    // Listen for offer from streamer and properly destructure the offer property
+    // 🧠 Make sure this runs AFTER joining room
     socket.on("offer", async ({ offer }) => {
-      console.log("VIEWER: Received offer for streamId:", id, "Offer:", offer);
-      if (peerConnectionRef.current) {
-        try {
-          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-          const answer = await peerConnectionRef.current.createAnswer();
-          await peerConnectionRef.current.setLocalDescription(answer);
-          console.log("VIEWER: Sending answer for streamId:", id, "Answer:", answer);
-          socket.emit("answer", { streamId: id, answer });
-        } catch (err) {
-          console.error("Failed to handle offer:", err);
-        }
+      console.log("VIEWER: Received offer:", offer);
+      try {
+        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await peerConnectionRef.current.createAnswer();
+        await peerConnectionRef.current.setLocalDescription(answer);
+        console.log("VIEWER: Sending answer");
+        socket.emit("answer", { streamId: id, answer });
+      } catch (err) {
+        console.error("VIEWER: Failed to process offer:", err);
       }
     });
 
-    // Listen for ICE candidates from streamer and destructure the candidate property
     socket.on("ice-candidate", async ({ candidate }) => {
       console.log("VIEWER: Received ICE candidate:", candidate);
       try {
-        if (peerConnectionRef.current) {
+        if (candidate) {
           await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
         }
       } catch (err) {
-        console.error("Error adding received ICE candidate", err);
+        console.error("VIEWER: Failed to add ICE candidate:", err);
       }
     });
-
-    socket.emit("join-stream", { streamId: id });
   };
 
   useEffect(() => {
@@ -827,9 +816,7 @@ const WatchStream = () => {
               renderItem={(msg, index) => (
                 <List.Item key={index}>
                   <strong>{msg.username}</strong>: {msg.message}
-                  <em style={{ fontSize: "0.8em", color: "#999", marginLeft: "5px" }}>
-                    {msg.time}
-                  </em>
+                  <em style={{ fontSize: "0.8em", color: "#999", marginLeft: "5px" }}>{msg.time}</em>
                 </List.Item>
               )}
             />
