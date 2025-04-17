@@ -15,6 +15,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  margin-left: 10px;
 }
 
 .landing-container img {
@@ -128,7 +129,7 @@
   color: white !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   .landing-container {
     flex-direction: column;
     height: auto;
