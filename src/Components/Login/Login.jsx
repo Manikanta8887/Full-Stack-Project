@@ -18,8 +18,6 @@
 // import { setFirebaseUser } from "../Redux/Store";
 // import "./Login.css";
 // import baseurl from "../../base";
-// import { signInWithRedirect, getRedirectResult } from "firebase/auth";
-
 
 // const Login = () => {
 //   const navigate = useNavigate();
@@ -48,35 +46,6 @@
 //       }
 //     });
 //   }, [dispatch]);
-
-//   useEffect(() => {
-//     getRedirectResult(Auth)
-//       .then((result) => {
-//         if (result && result.user) {
-//           const user = result.user;
-//           const userData = {
-//             uid: user.uid,
-//             name: user.displayName,
-//             email: user.email,
-//             profilePic: user.photoURL,
-//           };
-//           dispatch(
-//             setFirebaseUser({
-//               uid: user.uid,
-//               email: user.email,
-//               displayName: user.displayName,
-//               photoURL: user.photoURL,
-//             })
-//           );
-//           sendUserToBackend(userData, "google");
-//         }
-//       })
-//       .catch((error) => {
-//         console.error("Redirect Login Error:", error);
-//         toast.error("Google redirect login failed.");
-//       });
-//   }, []);
-  
 
 //   const sendUserToBackend = async (userData, loginType) => {
 //     try {
@@ -131,73 +100,31 @@
 //       .finally(() => setLoading({ ...loading, email: false }));
 //   };
 
-//   // const handleGoogleLogin = () => {
-//   //   setLoading({ ...loading, google: true });
-
-//   //   signInWithPopup(Auth, GoogleProvider)
-//   //     .then((result) => {
-//   //       const user = result.user;
-//   //       const userData = {
-//   //         uid: user.uid,
-//   //         name: user.displayName,
-//   //         email: user.email,
-//   //         profilePic: user.photoURL,
-//   //       };
-//   //       dispatch(
-//   //         setFirebaseUser({
-//   //           uid: user.uid,
-//   //           email: user.email,
-//   //           displayName: user.displayName,
-//   //           photoURL: user.photoURL,
-//   //         })
-//   //       );
-//   //       sendUserToBackend(userData, "google");
-//   //     })
-//   //     .catch(() => toast.error("Google login failed"))
-//   //     .finally(() => setLoading({ ...loading, google: false }));
-//   // };
 //   const handleGoogleLogin = () => {
 //     setLoading({ ...loading, google: true });
-  
-//     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-//     const isInAppBrowser = () => {
-//       const ua = navigator.userAgent || navigator.vendor;
-//       return ua.includes("FBAN") || ua.includes("FBAV") || ua.includes("Instagram");
-//     };
-  
-//     if (isInAppBrowser()) {
-//       toast.error("Please open this page in Chrome or Safari for Google Login.");
-//       setLoading({ ...loading, google: false });
-//       return;
-//     }
-  
-//     if (isMobile) {
-//       signInWithRedirect(Auth, GoogleProvider);
-//     } else {
-//       signInWithPopup(Auth, GoogleProvider)
-//         .then((result) => {
-//           const user = result.user;
-//           const userData = {
+
+//     signInWithPopup(Auth, GoogleProvider)
+//       .then((result) => {
+//         const user = result.user;
+//         const userData = {
+//           uid: user.uid,
+//           name: user.displayName,
+//           email: user.email,
+//           profilePic: user.photoURL,
+//         };
+//         dispatch(
+//           setFirebaseUser({
 //             uid: user.uid,
-//             name: user.displayName,
 //             email: user.email,
-//             profilePic: user.photoURL,
-//           };
-//           dispatch(
-//             setFirebaseUser({
-//               uid: user.uid,
-//               email: user.email,
-//               displayName: user.displayName,
-//               photoURL: user.photoURL,
-//             })
-//           );
-//           sendUserToBackend(userData, "google");
-//         })
-//         .catch(() => toast.error("Google login failed"))
-//         .finally(() => setLoading({ ...loading, google: false }));
-//     }
+//             displayName: user.displayName,
+//             photoURL: user.photoURL,
+//           })
+//         );
+//         sendUserToBackend(userData, "google");
+//       })
+//       .catch(() => toast.error("Google login failed"))
+//       .finally(() => setLoading({ ...loading, google: false }));
 //   };
-  
 
 //   const handleGuestLogin = () => {
 //     setLoading({ ...loading, guest: true });
@@ -353,7 +280,6 @@
 
 // export default Login;
 
-
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Input, Button } from "antd";
@@ -361,11 +287,11 @@ import { EyeInvisibleOutlined, EyeTwoTone, SyncOutlined } from "@ant-design/icon
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signInAnonymously,
   sendPasswordResetEmail,
   onAuthStateChanged,
+  signInWithRedirect,
+  getRedirectResult,
 } from "firebase/auth";
 import { Auth, GoogleProvider } from "../Firebase/Firebaseconfig";
 import axios from "axios";
@@ -423,8 +349,7 @@ const Login = () => {
         }
       })
       .catch((error) => {
-        console.error("Redirect Login Error:", error);
-        toast.error("Google redirect login failed.");
+        console.error("Redirect Google login failed:", error);
       });
   }, []);
 
@@ -435,15 +360,12 @@ const Login = () => {
   const sendUserToBackend = async (userData, loginType) => {
     try {
       await axios.post(`${baseurl}/api/users`, userData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
 
       toast.dismiss();
       toast.success(`${loginType.charAt(0).toUpperCase() + loginType.slice(1)} Login Successful!`);
-
       setTimeout(() => navigate("/livestreamingplatform", { replace: true }), 2000);
     } catch (error) {
       console.error("Login Error:", error);
@@ -485,45 +407,16 @@ const Login = () => {
       .finally(() => setLoading({ ...loading, email: false }));
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading({ ...loading, google: true });
 
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isInAppBrowser = () => {
-      const ua = navigator.userAgent || navigator.vendor;
-      return ua.includes("FBAN") || ua.includes("FBAV") || ua.includes("Instagram");
-    };
-
-    if (isInAppBrowser()) {
-      toast.error("Please open this page in Chrome or Safari for Google Login.");
+    try {
+      await signInWithPopup(Auth, GoogleProvider);
+    } catch (error) {
+      console.warn("Popup failed, falling back to redirect login");
+      await signInWithRedirect(Auth, GoogleProvider);
+    } finally {
       setLoading({ ...loading, google: false });
-      return;
-    }
-
-    if (isMobile) {
-      signInWithRedirect(Auth, GoogleProvider);
-    } else {
-      signInWithPopup(Auth, GoogleProvider)
-        .then((result) => {
-          const user = result.user;
-          const userData = {
-            uid: user.uid,
-            name: user.displayName,
-            email: user.email,
-            profilePic: user.photoURL,
-          };
-          dispatch(
-            setFirebaseUser({
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-            })
-          );
-          sendUserToBackend(userData, "google");
-        })
-        .catch(() => toast.error("Google login failed"))
-        .finally(() => setLoading({ ...loading, google: false }));
     }
   };
 
