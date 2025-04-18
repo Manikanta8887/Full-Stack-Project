@@ -283,6 +283,7 @@ const WatchStream = () => {
     });
 
     return () => {
+      socket.emit("leave-stream", { streamId: id })
       socket.off("stream-info");
       socket.off("stream-ended");
       socket.off("offer");

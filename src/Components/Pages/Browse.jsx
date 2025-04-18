@@ -158,6 +158,7 @@
 
 // export default Browse;
 
+
 // Browse.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, Input, Row, Col, Typography, message, Button, Tooltip, Space } from "antd";
@@ -214,7 +215,7 @@ const Browse = () => {
   );
 
   const copyLink = (id) => {
-    const full = `${window.location.origin}/watch/${id}`;
+    const full = `${window.location.origin}/livestreamingplatform/watch/${id}`;
     navigator.clipboard.writeText(full).then(() => {
       message.success("Link copied!");
     });
@@ -234,7 +235,7 @@ const Browse = () => {
         ) : (
           filteredLive.map((stream) => (
             <Col xs={24} sm={12} md={8} lg={6} key={stream.id}>
-              <Link to={`/watch/${stream.id}`}>
+              <Link to={`/livestreamingplatform/watch/${stream.id}`}>
                 <Card
                   hoverable
                   cover={
@@ -257,11 +258,11 @@ const Browse = () => {
               </Link>
               <div style={{ marginTop: 8 }}>
                 <Paragraph
-                  copyable={{ text: `/watch/${stream.id}` }}
+                  copyable={{ text: `${window.location.origin}/livestreamingplatform/watch/${stream.id}` }}
                   ellipsis
                   style={{ marginBottom: 4 }}
                 >
-                  🔗 /watch/{stream.id}
+                  🔗 {`${window.location.origin}/livestreamingplatform/watch/${stream.id}`}
                 </Paragraph>
                 <Space>
                   <Tooltip title="Copy full link">
@@ -304,8 +305,7 @@ const Browse = () => {
                     <>
                       <div>By {stream.streamerName}</div>
                       <div>
-                        Ended on{" "}
-                        {new Date(stream.endTime).toLocaleDateString()}
+                        Ended on {new Date(stream.endTime).toLocaleDateString()}
                       </div>
                     </>
                   }

@@ -795,6 +795,8 @@ const StartStreaming = () => {
   const [viewerCount, setViewerCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [streamId, setStreamId] = useState(localStorage.getItem("streamId") || "");
+  const answerTimeoutRef = useRef(null);
+
 
   const servers = {
     iceServers: [
@@ -825,6 +827,7 @@ const StartStreaming = () => {
   useEffect(() => {
     socket.on("chat-message", (msg) => setMessages((prev) => [...prev, msg]));
     socket.on("answer", async ({ answer }) => {
+      clearTimeout(answerTimeoutRef.current);
       await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(answer));
     });
     socket.on("ice-candidate", async ({ candidate }) => {
@@ -909,7 +912,12 @@ const StartStreaming = () => {
   const toggleMute = () => {
     if (stream) {
       stream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled));
-      setIsMuted((prev) => !prev);
+      // setIsMuted((prev) => !prev);
+      setIsMuted((prev) => {
+        const next = !prev;
+        if (videoRef.current) videoRef.current.muted = next;
+        return next;
+      });
     }
   };
 
@@ -980,7 +988,15 @@ const StartStreaming = () => {
       const offer = await peerConnectionRef.current.createOffer();
       await peerConnectionRef.current.setLocalDescription(offer);
 
+      // socket.emit("offer", { streamId: newStreamId, offer });
       socket.emit("offer", { streamId: newStreamId, offer });
+
+    // If no answer comes back in 20s, tear down the offer to avoid dangling PC
+    answerTimeoutRef.current = setTimeout(() => {
+      message.error("No viewer answered—closing peer connection.");
+      peerConnectionRef.current?.close();
+      peerConnectionRef.current = null;
+    }, 20_000);
       socket.emit("start-stream", {
         streamId: newStreamId,
         streamTitle,
@@ -989,8 +1005,17 @@ const StartStreaming = () => {
         profilePic: firebaseUser?.photoURL || null,
       });
     } catch (err) {
-      setError("Failed to access camera/mic.");
-      message.error("Permission denied or no camera/mic available.");
+      // setError("Failed to access camera/mic.");
+      // message.error("Permission denied or no camera/mic available.");
+      if (err.name === "NotAllowedError") {
+            Modal.error({
+              title: "Camera & Microphone Blocked",
+              content:
+                "Your browser has blocked camera/microphone access. Please enable them in your site settings.",
+            });
+          } else {
+            message.error(`getUserMedia error: ${err.message}`);
+          }
     } finally {
       setIsLoading(false);
     }
