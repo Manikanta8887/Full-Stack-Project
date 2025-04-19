@@ -191,22 +191,20 @@ import {
   Typography,
   Row,
   Col,
-  List,
-  Card,
   Progress,
 } from "antd";
 import { UploadOutlined, UserOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
 import { updateUser } from "../Redux/userSlice.js";
 import axios from "axios";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./Profile.css";
 
 const { Title } = Typography;
 const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB in bytes
 
 const ProfilePage = () => {
-  const { uid } = useParams(); // for public profile
+  const { uid } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const loggedIn = useSelector((s) => s.user.firebaseUser);
@@ -217,7 +215,6 @@ const ProfilePage = () => {
   const [videos, setVideos] = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  // Fetch profile + videos
   useEffect(() => {
     const targetUid = isPublic ? uid : loggedIn?.uid;
     if (!targetUid) {
@@ -225,7 +222,6 @@ const ProfilePage = () => {
       return;
     }
 
-    // profile info
     if (isPublic) {
       axios
         .get(`/api/profile/${uid}`)
@@ -240,27 +236,25 @@ const ProfilePage = () => {
       });
     }
 
-    // videos
+    // Fetch videos with fallback
     axios
       .get(`/api/videos/${targetUid}`)
-      .then((res) => {
-        // expect res.data.videos = [{ url, public_id, coverImage, sizeInBytes }, ...]
-        setVideos(res.data.videos);
-      })
-      .catch(() =>
-        console.error("Error fetching user videos for", targetUid)
-      );
+      .then((res) => setVideos(res.data.videos || []))
+      .catch(() => {
+        console.error("Error fetching user videos for", targetUid);
+        setVideos([]);
+      });
   }, [uid, loggedIn, isPublic, form, navigate]);
 
   // Compute storage usage
   const usedBytes = useMemo(
-    () => videos.reduce((sum, v) => sum + (v.sizeInBytes || 0), 0),
+    () => (videos || []).reduce((sum, v) => sum + (v.sizeInBytes || 0), 0),
     [videos]
   );
   const usedMB = (usedBytes / (1024 * 1024)).toFixed(1);
   const percent = ((usedBytes / MAX_STORAGE) * 100).toFixed(1);
 
-  // Handle new-video upload
+  // Upload handlers
   const beforeUpload = (file) => {
     if (usedBytes + file.size > MAX_STORAGE) {
       message.error("Uploading this would exceed your 1 GB quota.");
@@ -282,7 +276,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Edit profile
   const onFinish = async (vals) => {
     try {
       const updated = { ...loggedIn, ...vals };
@@ -328,7 +321,7 @@ const ProfilePage = () => {
             </Upload>
           )}
 
-          {/* Storage usage bar */}
+          {/* Storage Usage */}
           <div style={{ margin: "16px 0" }}>
             <Progress percent={Number(percent)} />
             <div>
@@ -337,11 +330,11 @@ const ProfilePage = () => {
             </div>
           </div>
 
-          {/* Video gallery */}
+          {/* Video Gallery */}
           <Title level={4}>Your Videos</Title>
           <div className="video-gallery">
-            {videos.length === 0 && <p>No videos uploaded yet.</p>}
-            {videos.map((v) => (
+            { (videos?.length ?? 0) === 0 && <p>No videos uploaded yet.</p> }
+            { (videos || []).map((v) => (
               <div
                 key={v.public_id}
                 className="video-box"
@@ -362,10 +355,10 @@ const ProfilePage = () => {
                   onPlay={(e) => (e.target.style.display = "block")}
                 />
               </div>
-            ))}
+            )) }
           </div>
 
-          {/* Profile form (only for own profile) */}
+          {/* Profile Form (only for self) */}
           {!isPublic && (
             <Form
               form={form}
@@ -392,44 +385,6 @@ const ProfilePage = () => {
                 </Button>
               </Form.Item>
             </Form>
-          )}
-
-          {/* Past Streams (both public & self) */}
-          <Title level={3} style={{ marginTop: 32 }}>
-            Past Streams
-          </Title>
-          {profileData?.pastStreams?.length === 0 ? (
-            <p>No past streams available.</p>
-          ) : (
-            <List
-              grid={{ gutter: 16, column: 2 }}
-              dataSource={profileData.pastStreams}
-              renderItem={(s) => (
-                <List.Item>
-                  <Card
-                    hoverable
-                    cover={
-                      <img
-                        alt="Past Stream"
-                        src={s.thumbnail || "/default-stream.jpg"}
-                      />
-                    }
-                  >
-                    <Card.Meta
-                      title={s.streamTitle}
-                      description={`Ended on ${new Date(
-                        s.endTime
-                      ).toLocaleDateString()}`}
-                    />
-                    <div style={{ marginTop: 8 }}>
-                      <Link to={`/livestreamingplatform/watch/${s.streamerId}`}>
-                        View Stream
-                      </Link>
-                    </div>
-                  </Card>
-                </List.Item>
-              )}
-            />
           )}
         </div>
       </Col>

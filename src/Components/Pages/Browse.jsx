@@ -158,7 +158,6 @@
 
 // export default Browse;
 
-
 // src/pages/Browse.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -186,7 +185,7 @@ const Browse = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadedVideos, setUploadedVideos] = useState([]);
 
-  // --- Socket.io for live streams ---
+  // — Live streams via Socket.IO —
   useEffect(() => {
     socket.emit("get-streams");
     socket.on("stream-list", ({ liveStreams }) => {
@@ -209,20 +208,20 @@ const Browse = () => {
     };
   }, []);
 
-  // --- Fetch all users' uploaded videos from backend ---
+  // — Fetch uploaded videos —
   useEffect(() => {
     axios
       .get("/api/videos")
       .then((res) => {
-        // expect res.data.videos = [{ url, public_id, coverImage, userName }, ...]
-        setUploadedVideos(res.data.videos);
+        // Fallback to empty array if undefined/null
+        setUploadedVideos(res.data.videos || []);
       })
       .catch((err) => {
         console.error("Error fetching uploaded videos:", err);
+        setUploadedVideos([]); // ensure it's always an array
       });
   }, []);
 
-  // Filter live streams by search
   const filteredLive = useMemo(
     () =>
       liveStreams.filter((s) =>
@@ -234,7 +233,7 @@ const Browse = () => {
   const handleCopyLink = (streamId) => {
     const full = `${window.location.origin}/livestreamingplatform/watch/${streamId}`;
     navigator.clipboard.writeText(full).then(() => {
-      message.success("Stream link copied to clipboard!");
+      message.success("Stream link copied!");
     });
   };
 
@@ -278,10 +277,7 @@ const Browse = () => {
                       description={
                         <>
                           <div>
-                            By{" "}
-                            {stream.streamerName ||
-                              stream.streamerId ||
-                              "Unknown"}
+                            By {stream.streamerName || stream.streamerId || "Unknown"}
                           </div>
                           <div>👁️ {stream.viewers || 0} viewers</div>
                         </>
@@ -316,11 +312,9 @@ const Browse = () => {
       </Row>
 
       {/* Uploaded Videos */}
-      <Title level={3} style={{ marginTop: 30 }}>
-        📹 Uploaded Videos
-      </Title>
+      <Title level={3} style={{ marginTop: 30 }}>📹 Uploaded Videos</Title>
       <Row gutter={[16, 16]}>
-        {uploadedVideos.length === 0 ? (
+        { (uploadedVideos?.length ?? 0) === 0 ? (
           <p>No videos uploaded yet</p>
         ) : (
           uploadedVideos.map((vid) => (
@@ -337,8 +331,8 @@ const Browse = () => {
                 }
               >
                 <Card.Meta
-                  title={vid.userName}
-                  description={`Uploaded by ${vid.userName}`}
+                  title={vid.uploaderName || "Uploader"}
+                  description={`Uploaded by ${vid.uploaderName}`}
                 />
               </Card>
               <video
