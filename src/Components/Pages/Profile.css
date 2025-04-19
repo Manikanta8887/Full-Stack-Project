@@ -10,7 +10,7 @@
   flex-wrap: wrap;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  /* box-shadow: 0 2px 8px rgba(0,0,0,0.1); */
   margin-bottom: 30px;
 }
 .profile-avatar {
@@ -43,7 +43,7 @@
   margin-bottom: 30px;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  /* box-shadow: 0 2px 8px rgba(0,0,0,0.1); */
   text-align: center;
 }
 .profile-storage .ant-progress {
@@ -85,7 +85,7 @@
   max-width: 600px;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  /* box-shadow: 0 2px 8px rgba(0,0,0,0.1); */
 }
 .bio-form .ant-form-item {
   margin-bottom: 16px;
