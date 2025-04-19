@@ -112,9 +112,9 @@
 }
 
 @media (max-width: 480px) {
-  .profile-container {
-    /* padding: 10px; */
-  }
+  /* .profile-container {
+    padding: 10px;
+  } */
   .profile-avatar {
     width: 80px;
     height: 80px;

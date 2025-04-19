@@ -116,7 +116,7 @@ const ProfilePage = () => {
         </div>
         {!isPublic && (
           <div className="profile-upload-btn">
-            <Upload
+            {/* <Upload
               name="video"
               action={`/api/upload-video/${loggedIn.uid}`}
               beforeUpload={beforeUpload}
@@ -127,15 +127,37 @@ const ProfilePage = () => {
               <Button icon={<UploadOutlined />} loading={uploading}>
                 Upload Video
               </Button>
-            </Upload>
+            </Upload> */}
+              <Upload
+                name="video"
+                customRequest={({ file, onProgress, onSuccess, onError }) => {
+                  const formData = new FormData();
+                  formData.append("video", file);
+                  axios.post(`/api/videos/upload/${loggedIn.uid}`, formData, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                    onUploadProgress: ({ loaded, total }) => {
+                      onProgress({ percent: Math.round((loaded / total) * 100) });
+                    }
+                  })
+                    .then(res => onSuccess(res.data, file))
+                    .catch(err => onError(err));
+                }}
+                beforeUpload={beforeUpload}
+                showUploadList={false}
+                accept="video/*"
+              >
+                <Button icon={<UploadOutlined />} loading={uploading}>
+                  Upload Video
+                </Button>
+              </Upload>
 
-            <Button
-              type="default"
-              style={{ marginLeft: "10px" }}
-              onClick={() => setShowBioInput(!showBioInput)}
-            >
-              {showBioInput ? "Cancel Bio Edit" : "Edit Bio"}
-            </Button>
+              <Button
+                type="default"
+                style={{ marginLeft: "10px" }}
+                onClick={() => setShowBioInput(!showBioInput)}
+              >
+                {showBioInput ? "Cancel Bio Edit" : "Edit Bio"}
+              </Button>
           </div>
 
         )}
