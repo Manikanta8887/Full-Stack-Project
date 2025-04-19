@@ -332,7 +332,7 @@ export default function ProfilePage() {
 
                 try {
                   const res = await axios.post(
-                    `/api/upload-video/${loggedIn.uid}`,
+                    `/api/videos/upload/${loggedIn.uid}`,
                     fd,
                     {
                       headers: { "Content-Type": "multipart/form-data" },
