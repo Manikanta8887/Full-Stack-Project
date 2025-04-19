@@ -429,6 +429,8 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState(null);
   const [videos, setVideos] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [showBioInput, setShowBioInput] = useState(false);
+
 
   useEffect(() => {
     const targetUid = isPublic ? uid : loggedIn?.uid;
@@ -497,9 +499,7 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-container">
-      {/* <Title level={2}>Profile</Title> */}
 
-      {/* Header */}
       <div className="profile-header">
         <Avatar
           className="profile-avatar"
@@ -512,6 +512,20 @@ const ProfilePage = () => {
           <p>{profileData?.bio || "Hey there! I'm using Touch Live."}</p>
         </div>
         {!isPublic && (
+          // <div className="profile-upload-btn">
+          //   <Upload
+          //     name="video"
+          //     action={`/api/upload-video/${loggedIn.uid}`}
+          //     beforeUpload={beforeUpload}
+          //     onChange={handleVideoUpload}
+          //     showUploadList={false}
+          //     accept="video/*"
+          //   >
+          //     <Button icon={<UploadOutlined />} loading={uploading}>
+          //       Upload Video
+          //     </Button>
+          //   </Upload>
+          // </div>
           <div className="profile-upload-btn">
             <Upload
               name="video"
@@ -525,9 +539,37 @@ const ProfilePage = () => {
                 Upload Video
               </Button>
             </Upload>
+
+            <Button
+              type="default"
+              style={{ marginLeft: "10px" }}
+              onClick={() => setShowBioInput(!showBioInput)}
+            >
+              {showBioInput ? "Cancel Bio Edit" : "Edit Bio"}
+            </Button>
           </div>
+
         )}
       </div>
+      {!isPublic && showBioInput && (
+        <Form
+          className="bio-form"
+          form={form}
+          layout="vertical"
+          onFinish={onBioFinish}
+          style={{ marginTop: "20px" }}
+        >
+          <Form.Item name="bio" label="Edit Your Bio">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block>
+              Save Bio
+            </Button>
+          </Form.Item>
+        </Form>
+      )}
+
 
       {/* Storage */}
       <div className="profile-storage">
@@ -560,24 +602,6 @@ const ProfilePage = () => {
         ))}
       </div>
 
-      {/* Bio form */}
-      {!isPublic && (
-        <Form
-          className="bio-form"
-          form={form}
-          layout="vertical"
-          onFinish={onBioFinish}
-        >
-          <Form.Item name="bio" label="Edit Your Bio">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Save Bio
-            </Button>
-          </Form.Item>
-        </Form>
-      )}
     </div>
   );
 };
