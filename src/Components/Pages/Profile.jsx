@@ -497,7 +497,7 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-container">
-      <Title level={2}>Profile</Title>
+      {/* <Title level={2}>Profile</Title> */}
 
       {/* Header */}
       <div className="profile-header">
