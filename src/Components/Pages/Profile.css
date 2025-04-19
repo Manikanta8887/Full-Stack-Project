@@ -1,4 +1,4 @@
-.profile-container {
+/* .profile-container {
   padding: 20px;
   text-align: center;
 }
@@ -15,4 +15,121 @@
 
 .profile-card input {
   margin: 5px 0;
+} */
+
+
+/* Container */
+.profile-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f9f9f9;
+}
+
+/* Profile header: avatar + upload button */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+}
+.profile-upload-btn {
+  margin-left: auto;
+}
+
+/* Storage progress */
+.profile-storage {
+  width: 100%;
+  margin-bottom: 30px;
+}
+.profile-storage .ant-progress {
+  margin-bottom: 8px;
+}
+.profile-storage-text {
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Video gallery */
+.video-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+.video-box {
+  position: relative;
+  width: 200px;
+}
+.video-box img,
+.video-box video {
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #000;
+}
+.video-box video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+}
+
+/* Profile form styling */
+.profile-form {
+  width: 100%;
+  max-width: 600px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.profile-form .ant-form-item {
+  margin-bottom: 16px;
+}
+.profile-form .ant-btn {
+  width: 100%;
+  padding: 10px 0;
+  border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+  }
+  .profile-upload-btn {
+    margin-left: 0;
+  }
+  .video-box {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-container {
+    padding: 10px;
+  }
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+  }
+  .profile-form {
+    padding: 15px;
+  }
 }
