@@ -216,6 +216,7 @@ import { updateUser } from "../Redux/userSlice.js";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import "./Profile.css";
+import baseurl from "../../base.js"
 
 const { Title } = Typography;
 const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
@@ -240,7 +241,7 @@ export default function ProfilePage() {
 
     if (isPublic) {
       axios
-        .get(`/api/profile/${uid}`)
+        .get(`${baseurl}/api/profile/${uid}`)
         .then((res) => setProfileData(res.data))
         .catch(() => message.error("Failed to load profile data."));
     } else {
@@ -249,7 +250,7 @@ export default function ProfilePage() {
     }
 
     axios
-      .get(`/api/videos/${targetUid}`)
+      .get(`${baseurl}/api/videos/${targetUid}`)
       .then((res) => setVideos(res.data.videos || []))
       .catch(() => setVideos([]));
   }, [uid, loggedIn, isPublic, form, navigate]);
@@ -289,7 +290,7 @@ export default function ProfilePage() {
   const onBioFinish = async ({ bio }) => {
     try {
       const updated = { ...loggedIn, bio };
-      await axios.put(`/api/users/${loggedIn.uid}`, updated);
+      await axios.put(`${baseurl}/api/users/${loggedIn.uid}`, updated);
       dispatch(updateUser(updated));
       message.success("Bio updated!");
     } catch {
@@ -332,7 +333,7 @@ export default function ProfilePage() {
 
                 try {
                   const res = await axios.post(
-                    `/api/videos/upload/${loggedIn.uid}`,
+                    `${baseurl}/api/videos/upload/${loggedIn.uid}`,
                     fd,
                     {
                       headers: { "Content-Type": "multipart/form-data" },

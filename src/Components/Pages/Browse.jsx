@@ -210,7 +210,7 @@ const Browse = () => {
   // — Fetch uploaded videos —
   useEffect(() => {
     axios
-      .get("/api/videos")
+      .get(`${baseurl}/api/videos`)
       .then((res) => {
         // Fallback to empty array if undefined/null
         setUploadedVideos(res.data.videos || []);
