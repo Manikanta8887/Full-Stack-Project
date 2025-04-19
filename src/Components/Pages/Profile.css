@@ -11,7 +11,6 @@
   flex-wrap: wrap;
   padding: 20px;
   border-radius: 8px;
-  /* box-shadow: 0 2px 8px rgba(0,0,0,0.1); */
   margin-bottom: 30px;
 }
 .profile-avatar {
@@ -40,11 +39,10 @@
 
 /* Storage progress */
 .profile-storage {
-  width: 80%;
+  width: 100%;
   margin-bottom: 30px;
   padding: 20px;
   border-radius: 8px;
-  /* box-shadow: 0 2px 8px rgba(0,0,0,0.1); */
   text-align: center;
 }
 .profile-storage .ant-progress {
