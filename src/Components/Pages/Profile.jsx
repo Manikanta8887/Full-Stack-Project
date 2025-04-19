@@ -197,6 +197,8 @@
 
 // export default ProfilePage;
 
+// src/pages/ProfilePage.jsx
+
 import React, { useEffect, useState, useMemo } from "react";
 import {
   Form,
@@ -216,9 +218,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./Profile.css";
 
 const { Title } = Typography;
-const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB quota
+const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
 
-const ProfilePage = () => {
+export default function ProfilePage() {
   const { uid } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -231,7 +233,7 @@ const ProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [showBioInput, setShowBioInput] = useState(false);
 
-  // Load profile + user’s videos
+  // Load profile + videos
   useEffect(() => {
     const targetUid = isPublic ? uid : loggedIn?.uid;
     if (!targetUid) return navigate("/login");
@@ -252,7 +254,7 @@ const ProfilePage = () => {
       .catch(() => setVideos([]));
   }, [uid, loggedIn, isPublic, form, navigate]);
 
-  // Storage usage
+  // Compute storage usage
   const usedBytes = useMemo(
     () => videos.reduce((sum, v) => sum + (v.sizeInBytes || 0), 0),
     [videos]
@@ -260,16 +262,16 @@ const ProfilePage = () => {
   const usedMB = (usedBytes / (1024 * 1024)).toFixed(1);
   const percent = ((usedBytes / MAX_STORAGE) * 100).toFixed(1);
 
-  // Reject if over quota
+  // Prevent over‐quota uploads
   const beforeUpload = (file) => {
     if (usedBytes + file.size > MAX_STORAGE) {
-      message.error("Uploading this would exceed your 1 GB quota.");
+      message.error("This upload would exceed your 1 GB quota.");
       return Upload.LIST_IGNORE;
     }
     return true;
   };
 
-  // Handle AntD Upload change events
+  // Handle AntD Upload events
   const handleVideoUpload = ({ file }) => {
     if (file.status === "uploading") {
       setUploading(true);
@@ -283,7 +285,7 @@ const ProfilePage = () => {
     }
   };
 
-  // Bio save
+  // Save bio
   const onBioFinish = async ({ bio }) => {
     try {
       const updated = { ...loggedIn, bio };
@@ -291,11 +293,11 @@ const ProfilePage = () => {
       dispatch(updateUser(updated));
       message.success("Bio updated!");
     } catch {
-      message.error("Update failed.");
+      message.error("Failed to update bio.");
     }
   };
 
-  // Show video player
+  // Play clicked video
   const playVideo = (id) => {
     const vid = document.getElementById(id);
     if (vid) {
@@ -314,39 +316,28 @@ const ProfilePage = () => {
           icon={<UserOutlined />}
         />
         <div className="profile-info">
-          <h3>
-            {profileData?.displayName ||
-              profileData?.name ||
-              "Streamer"}
-          </h3>
-          <p>
-            {profileData?.bio ||
-              "Hey there! I'm using Touch Live."}
-          </p>
+          <h3>{profileData?.displayName || profileData?.name || "Streamer"}</h3>
+          <p>{profileData?.bio || "Hey there! I'm using Touch Live."}</p>
         </div>
 
         {!isPublic && (
           <div className="profile-upload-btn">
             <Upload
-              name="video"
               accept="video/*"
               beforeUpload={beforeUpload}
+              showUploadList={false}
               customRequest={async ({ file, onProgress, onError, onSuccess }) => {
-                // Build FormData
                 const fd = new FormData();
                 fd.append("video", file);
+
                 try {
                   const res = await axios.post(
                     `/api/upload-video/${loggedIn.uid}`,
                     fd,
                     {
-                      headers: {
-                        "Content-Type": "multipart/form-data",
-                      },
+                      headers: { "Content-Type": "multipart/form-data" },
                       onUploadProgress: ({ loaded, total }) =>
-                        onProgress({
-                          percent: Math.round((loaded / total) * 100),
-                        }),
+                        onProgress({ percent: Math.round((loaded / total) * 100) }),
                     }
                   );
                   onSuccess(res.data, file);
@@ -355,94 +346,65 @@ const ProfilePage = () => {
                 }
               }}
               onChange={handleVideoUpload}
-              showUploadList={false}
             >
-              <Button
-                icon={<UploadOutlined />}
-                loading={uploading}
-              >
+              <Button icon={<UploadOutlined />} loading={uploading}>
                 Upload Video
               </Button>
             </Upload>
 
             <Button
-              type="default"
               style={{ marginLeft: 10 }}
-              onClick={() =>
-                setShowBioInput((v) => !v)
-              }
+              onClick={() => setShowBioInput((v) => !v)}
             >
-              {showBioInput
-                ? "Cancel Bio Edit"
-                : "Edit Bio"}
+              {showBioInput ? "Cancel Bio Edit" : "Edit Bio"}
             </Button>
           </div>
         )}
       </div>
 
-      {/* Bio form */}
       {!isPublic && showBioInput && (
         <Form
           className="bio-form"
           form={form}
           layout="vertical"
           onFinish={onBioFinish}
-          style={{ marginTop: 20 }}
+          style={{ marginBottom: 20 }}
         >
           <Form.Item name="bio" label="Edit Your Bio">
             <Input.TextArea rows={3} />
           </Form.Item>
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-            >
+            <Button type="primary" htmlType="submit" block>
               Save Bio
             </Button>
           </Form.Item>
         </Form>
       )}
 
-      {/* Storage bar */}
       <div className="profile-storage">
         <Progress percent={Number(percent)} />
         <div className="profile-storage-text">
-          Used {usedMB} MB of{" "}
-          {Math.round(MAX_STORAGE / (1024 * 1024))} MB (
+          Used {usedMB} MB of {Math.round(MAX_STORAGE / (1024 * 1024))} MB (
           {percent}%)
         </div>
       </div>
 
-      {/* Video gallery */}
       <Title level={4}>Your Videos</Title>
       <div className="video-gallery">
-        {!videos.length && (
-          <p>No videos uploaded yet.</p>
-        )}
+        {videos.length === 0 && <p>No videos uploaded yet.</p>}
         {videos.map((v) => (
           <div key={v.public_id} className="video-box">
-            <img
-              src={v.coverImage}
-              alt="cover"
-              onClick={() =>
-                playVideo(v.public_id)
-              }
-            />
+            <img src={v.coverImage} alt="cover" onClick={() => playVideo(v.public_id)} />
             <video
               id={v.public_id}
               src={v.url}
               controls
               onClick={(e) => e.stopPropagation()}
-              onPlay={(e) =>
-                (e.target.style.display = "block")
-              }
+              onPlay={(e) => (e.target.style.display = "block")}
             />
           </div>
         ))}
       </div>
     </div>
   );
-};
-
-export default ProfilePage;
+}
