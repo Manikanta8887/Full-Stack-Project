@@ -229,7 +229,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./Profile.css";
 import baseurl from "../../base.js";
 
-const videoRefs = useRef({});
 
 const { Title } = Typography;
 const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
@@ -246,6 +245,8 @@ export default function ProfilePage() {
   const [videos, setVideos] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [showBioInput, setShowBioInput] = useState(false);
+
+  const videoRefs = useRef({});
 
   // Load profile + videos
   useEffect(() => {
