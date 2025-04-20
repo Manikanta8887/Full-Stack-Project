@@ -1,3 +1,215 @@
+// // import React, { useEffect, useState, useMemo } from "react";
+// // import {
+// //   Form,
+// //   Input,
+// //   Button,
+// //   Avatar,
+// //   Upload,
+// //   message,
+// //   Typography,
+// //   Progress,
+// // } from "antd";
+// // import { UploadOutlined, UserOutlined } from "@ant-design/icons";
+// // import { useSelector, useDispatch } from "react-redux";
+// // import { updateUser } from "../Redux/userSlice.js";
+// // import axios from "axios";
+// // import { useNavigate, useParams } from "react-router-dom";
+// // import "./Profile.css";
+// // import baseurl from "../../base.js"
+
+// // const { Title } = Typography;
+// // const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
+
+// // export default function ProfilePage() {
+// //   const { uid } = useParams();
+// //   const dispatch = useDispatch();
+// //   const navigate = useNavigate();
+// //   const loggedIn = useSelector((s) => s.user.firebaseUser);
+// //   const isPublic = uid && uid !== loggedIn?.uid;
+
+// //   const [form] = Form.useForm();
+// //   const [profileData, setProfileData] = useState(null);
+// //   const [videos, setVideos] = useState([]);
+// //   const [uploading, setUploading] = useState(false);
+// //   const [showBioInput, setShowBioInput] = useState(false);
+
+// //   // Load profile + videos
+// //   useEffect(() => {
+// //     const targetUid = isPublic ? uid : loggedIn?.uid;
+// //     if (!targetUid) return navigate("/login");
+
+// //     if (isPublic) {
+// //       axios
+// //         .get(`${baseurl}/api/profile/${uid}`)
+// //         .then((res) => setProfileData(res.data))
+// //         .catch(() => message.error("Failed to load profile data."));
+// //     } else {
+// //       setProfileData(loggedIn);
+// //       form.setFieldsValue({ bio: loggedIn.bio });
+// //     }
+
+// //     axios
+// //       .get(`${baseurl}/api/videos/${targetUid}`)
+// //       .then((res) => setVideos(res.data.videos || []))
+// //       .catch(() => setVideos([]));
+// //   }, [uid, loggedIn, isPublic, form, navigate]);
+
+// //   // Compute storage usage
+// //   const usedBytes = useMemo(
+// //     () => videos.reduce((sum, v) => sum + (v.sizeInBytes || 0), 0),
+// //     [videos]
+// //   );
+// //   const usedMB = (usedBytes / (1024 * 1024)).toFixed(1);
+// //   const percent = ((usedBytes / MAX_STORAGE) * 100).toFixed(1);
+
+// //   // Prevent over‐quota uploads
+// //   const beforeUpload = (file) => {
+// //     if (usedBytes + file.size > MAX_STORAGE) {
+// //       message.error("This upload would exceed your 1 GB quota.");
+// //       return Upload.LIST_IGNORE;
+// //     }
+// //     return true;
+// //   };
+
+// //   // Handle AntD Upload events
+// //   const handleVideoUpload = ({ file }) => {
+// //     if (file.status === "uploading") {
+// //       setUploading(true);
+// //     } else if (file.status === "done") {
+// //       setVideos((prev) => [...prev, file.response.video]);
+// //       message.success("Video uploaded!");
+// //       setUploading(false);
+// //     } else if (file.status === "error") {
+// //       message.error("Video upload failed.");
+// //       setUploading(false);
+// //     }
+// //   };
+
+// //   // Save bio
+// //   const onBioFinish = async ({ bio }) => {
+// //     try {
+// //       const updated = { ...loggedIn, bio };
+// //       await axios.put(`${baseurl}/api/users/${loggedIn.uid}`, updated);
+// //       dispatch(updateUser(updated));
+// //       message.success("Bio updated!");
+// //     } catch {
+// //       message.error("Failed to update bio.");
+// //     }
+// //   };
+
+// //   // Play clicked video
+// //   const playVideo = (id) => {
+// //     const vid = document.getElementById(id);
+// //     if (vid) {
+// //       vid.style.display = "block";
+// //       vid.play();
+// //     }
+// //   };
+
+// //   return (
+// //     <div className="profile-container">
+// //       <div className="profile-header">
+// //         <Avatar
+// //           className="profile-avatar"
+// //           size={100}
+// //           src={profileData?.photoURL || "/default-avatar.png"}
+// //           icon={<UserOutlined />}
+// //         />
+// //         <div className="profile-info">
+// //           <h3>{profileData?.displayName || profileData?.name || "Streamer"}</h3>
+// //           <p>{profileData?.bio || "Hey there! I'm using Touch Live."}</p>
+// //         </div>
+
+// //         {!isPublic && (
+// //           <div className="profile-upload-btn">
+// //             <Upload
+// //               accept="video/*"
+// //               beforeUpload={beforeUpload}
+// //               showUploadList={false}
+// //               customRequest={async ({ file, onProgress, onError, onSuccess }) => {
+// //                 const fd = new FormData();
+// //                 fd.append("video", file);
+
+// //                 try {
+// //                   const res = await axios.post(
+// //                     `${baseurl}/api/videos/upload/${loggedIn.uid}`,
+// //                     fd,
+// //                     {
+// //                       headers: { "Content-Type": "multipart/form-data" },
+// //                       onUploadProgress: ({ loaded, total }) =>
+// //                         onProgress({ percent: Math.round((loaded / total) * 100) }),
+// //                     }
+// //                   );
+// //                   onSuccess(res.data, file);
+// //                 } catch (err) {
+// //                   onError(err);
+// //                 }
+// //               }}
+// //               onChange={handleVideoUpload}
+// //             >
+// //               <Button icon={<UploadOutlined />} loading={uploading}>
+// //                 Upload Video
+// //               </Button>
+// //             </Upload>
+
+// //             <Button
+// //               style={{ marginLeft: 10 }}
+// //               onClick={() => setShowBioInput((v) => !v)}
+// //             >
+// //               {showBioInput ? "Cancel Bio Edit" : "Edit Bio"}
+// //             </Button>
+// //           </div>
+// //         )}
+// //       </div>
+
+// //       {!isPublic && showBioInput && (
+// //         <Form
+// //           className="bio-form"
+// //           form={form}
+// //           layout="vertical"
+// //           onFinish={onBioFinish}
+// //           style={{ marginBottom: 20 }}
+// //         >
+// //           <Form.Item name="bio" label="Edit Your Bio">
+// //             <Input.TextArea rows={3} />
+// //           </Form.Item>
+// //           <Form.Item>
+// //             <Button type="primary" htmlType="submit" block>
+// //               Save Bio
+// //             </Button>
+// //           </Form.Item>
+// //         </Form>
+// //       )}
+
+// //       <div className="profile-storage">
+// //         <Progress percent={Number(percent)} />
+// //         <div className="profile-storage-text">
+// //           Used {usedMB} MB of {Math.round(MAX_STORAGE / (1024 * 1024))} MB (
+// //           {percent}%)
+// //         </div>
+// //       </div>
+
+// //       <Title level={4}>Your Videos</Title>
+// //       <div className="video-gallery">
+// //         {videos.length === 0 && <p>No videos uploaded yet.</p>}
+// //         {videos.map((v) => (
+// //           <div key={v.public_id} className="video-box">
+// //             <img src={v.coverImage} alt="cover" onClick={() => playVideo(v.public_id)} />
+// //             <video
+// //               id={v.public_id}
+// //               src={v.url}
+// //               controls
+// //               onClick={(e) => e.stopPropagation()}
+// //               onPlay={(e) => (e.target.style.display = "block")}
+// //             />
+// //           </div>
+// //         ))}
+// //       </div>
+// //     </div>
+// //   );
+// // }
+
+
 // import React, { useEffect, useState, useMemo } from "react";
 // import {
 //   Form,
@@ -15,10 +227,10 @@
 // import axios from "axios";
 // import { useNavigate, useParams } from "react-router-dom";
 // import "./Profile.css";
-// import baseurl from "../../base.js"
+// import baseurl from "../../base.js";
 
 // const { Title } = Typography;
-// const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
+// const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
 
 // export default function ProfilePage() {
 //   const { uid } = useParams();
@@ -97,7 +309,7 @@
 //     }
 //   };
 
-//   // Play clicked video
+//   // Play clicked video (show <video> and start)
 //   const playVideo = (id) => {
 //     const vid = document.getElementById(id);
 //     if (vid) {
@@ -116,7 +328,9 @@
 //           icon={<UserOutlined />}
 //         />
 //         <div className="profile-info">
-//           <h3>{profileData?.displayName || profileData?.name || "Streamer"}</h3>
+//           <h3>
+//             {profileData?.displayName || profileData?.name || "Streamer"}
+//           </h3>
 //           <p>{profileData?.bio || "Hey there! I'm using Touch Live."}</p>
 //         </div>
 
@@ -127,8 +341,21 @@
 //               beforeUpload={beforeUpload}
 //               showUploadList={false}
 //               customRequest={async ({ file, onProgress, onError, onSuccess }) => {
+//                 // Prompt for name
+//                 const entered = window.prompt(
+//                   "Enter a name for your video:",
+//                   "TouchLive"
+//                 );
+//                 const name = entered && entered.trim() ? entered.trim() : "TouchLive";
+//                 const username =
+//                   profileData?.displayName ||
+//                   profileData?.name ||
+//                   "Streamer";
+
 //                 const fd = new FormData();
 //                 fd.append("video", file);
+//                 fd.append("name", name);
+//                 fd.append("username", username);
 
 //                 try {
 //                   const res = await axios.post(
@@ -168,7 +395,6 @@
 //           form={form}
 //           layout="vertical"
 //           onFinish={onBioFinish}
-//           style={{ marginBottom: 20 }}
 //         >
 //           <Form.Item name="bio" label="Edit Your Bio">
 //             <Input.TextArea rows={3} />
@@ -193,8 +419,12 @@
 //       <div className="video-gallery">
 //         {videos.length === 0 && <p>No videos uploaded yet.</p>}
 //         {videos.map((v) => (
-//           <div key={v.public_id} className="video-box">
-//             <img src={v.coverImage} alt="cover" onClick={() => playVideo(v.public_id)} />
+//           <div
+//             key={v.public_id}
+//             className="video-box"
+//             onClick={() => playVideo(v.public_id)}
+//           >
+//             <img src={v.coverImage} alt={v.name} />
 //             <video
 //               id={v.public_id}
 //               src={v.url}
@@ -202,6 +432,10 @@
 //               onClick={(e) => e.stopPropagation()}
 //               onPlay={(e) => (e.target.style.display = "block")}
 //             />
+//             <div className="video-meta">
+//               <h4>{v.name}</h4>
+//               <p className="uploader-name">@{v.username}</p>
+//             </div>
 //           </div>
 //         ))}
 //       </div>
@@ -209,8 +443,7 @@
 //   );
 // }
 
-
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Form,
   Input,
@@ -229,9 +462,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./Profile.css";
 import baseurl from "../../base.js";
 
-
 const { Title } = Typography;
-const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
+const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
 
 export default function ProfilePage() {
   const { uid } = useParams();
@@ -245,8 +477,6 @@ export default function ProfilePage() {
   const [videos, setVideos] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [showBioInput, setShowBioInput] = useState(false);
-
-  const videoRefs = useRef({});
 
   // Load profile + videos
   useEffect(() => {
@@ -286,7 +516,7 @@ export default function ProfilePage() {
     return true;
   };
 
-  // Handle AntD Upload events
+  // Handle Upload events
   const handleVideoUpload = ({ file }) => {
     if (file.status === "uploading") {
       setUploading(true);
@@ -312,22 +542,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Play clicked video (show <video> and start)
-  // const playVideo = (id) => {
-  //   const vid = document.getElementById(id);
-  //   if (vid) {
-  //     vid.style.display = "block";
-  //     vid.play();
-  //   }
-  // };
-  const handleCardClick = (publicId) => {
-    const vid = videoRefs.current[publicId];
-    if (vid) {
-      vid.play();
-      vid.focus();
-    }
-  };
-
   return (
     <div className="profile-container">
       <div className="profile-header">
@@ -339,9 +553,14 @@ export default function ProfilePage() {
         />
         <div className="profile-info">
           <h3>
-            {profileData?.displayName || profileData?.name || "Streamer"}
+            {profileData?.displayName ||
+              profileData?.name ||
+              "Streamer"}
           </h3>
-          <p>{profileData?.bio || "Hey there! I'm using Touch Live."}</p>
+          <p>
+            {profileData?.bio ||
+              "Hey there! I'm using Touch Live."}
+          </p>
         </div>
 
         {!isPublic && (
@@ -350,13 +569,21 @@ export default function ProfilePage() {
               accept="video/*"
               beforeUpload={beforeUpload}
               showUploadList={false}
-              customRequest={async ({ file, onProgress, onError, onSuccess }) => {
-                // Prompt for name
+              customRequest={async ({
+                file,
+                onProgress,
+                onError,
+                onSuccess,
+              }) => {
+                // Prompt for video name
                 const entered = window.prompt(
                   "Enter a name for your video:",
                   "TouchLive"
                 );
-                const name = entered && entered.trim() ? entered.trim() : "TouchLive";
+                const name =
+                  entered && entered.trim()
+                    ? entered.trim()
+                    : "TouchLive";
                 const username =
                   profileData?.displayName ||
                   profileData?.name ||
@@ -372,9 +599,15 @@ export default function ProfilePage() {
                     `${baseurl}/api/videos/upload/${loggedIn.uid}`,
                     fd,
                     {
-                      headers: { "Content-Type": "multipart/form-data" },
+                      headers: {
+                        "Content-Type": "multipart/form-data",
+                      },
                       onUploadProgress: ({ loaded, total }) =>
-                        onProgress({ percent: Math.round((loaded / total) * 100) }),
+                        onProgress({
+                          percent: Math.round(
+                            (loaded / total) * 100
+                          ),
+                        }),
                     }
                   );
                   onSuccess(res.data, file);
@@ -384,16 +617,23 @@ export default function ProfilePage() {
               }}
               onChange={handleVideoUpload}
             >
-              <Button icon={<UploadOutlined />} loading={uploading}>
+              <Button
+                icon={<UploadOutlined />}
+                loading={uploading}
+              >
                 Upload Video
               </Button>
             </Upload>
 
             <Button
               style={{ marginLeft: 10 }}
-              onClick={() => setShowBioInput((v) => !v)}
+              onClick={() =>
+                setShowBioInput((v) => !v)
+              }
             >
-              {showBioInput ? "Cancel Bio Edit" : "Edit Bio"}
+              {showBioInput
+                ? "Cancel Bio Edit"
+                : "Edit Bio"}
             </Button>
           </div>
         )}
@@ -410,7 +650,11 @@ export default function ProfilePage() {
             <Input.TextArea rows={3} />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+            >
               Save Bio
             </Button>
           </Form.Item>
@@ -420,72 +664,34 @@ export default function ProfilePage() {
       <div className="profile-storage">
         <Progress percent={Number(percent)} />
         <div className="profile-storage-text">
-          Used {usedMB} MB of {Math.round(MAX_STORAGE / (1024 * 1024))} MB (
-          {percent}%)
+          Used {usedMB} MB of{" "}
+          {Math.round(
+            MAX_STORAGE / (1024 * 1024)
+          )}{" "}
+          MB ({percent}%)
         </div>
       </div>
 
-      {/* <Title level={4}>Your Videos</Title>
-      <div className="video-gallery">
-        {videos.length === 0 && <p>No videos uploaded yet.</p>}
-        {videos.map((v) => (
-          // <div
-          //   key={v.public_id}
-          //   className="video-box"
-          //   onClick={() => playVideo(v.public_id)}
-          // >
-          //   <img src={v.coverImage} alt={v.name} />
-          //   <video
-          //     id={v.public_id}
-          //     src={v.url}
-          //     controls
-          //     onClick={(e) => e.stopPropagation()}
-          //     onPlay={(e) => (e.target.style.display = "block")}
-          //   />
-          //   <div className="video-meta">
-          //     <h4>{v.name}</h4>
-          //     <p className="uploader-name">@{v.username}</p>
-          //   </div>
-          // </div>
-          <div key={v.public_id} className="video-box">
-                  <div className="video-wrapper">
-                    <video
-                      className="video-thumb"
-                      poster={v.coverImage}
-                      src={v.url}
-                      controls
-                      preload="metadata"
-                    />
-                  </div>
-                  <div className="video-meta">
-                    <h4>{v.name}</h4>
-                    <p className="uploader-name">@{v.username}</p>
-                  </div>
-                </div>
-        ))}
-      </div> */}
       <Title level={4}>Your Videos</Title>
       <div className="video-gallery">
-        {videos.length === 0 && <p>No videos uploaded yet.</p>}
+        {videos.length === 0 && (
+          <p>No videos uploaded yet.</p>
+        )}
         {videos.map((v) => (
-          <div
-            key={v.public_id}
-            className="video-box"
-            onClick={() => handleCardClick(v.public_id)}
-          >
-            <div className="video-wrapper">
-              <video
-                ref={(el) => (videoRefs.current[v.public_id] = el)}
-                className="video-thumb"
-                poster={v.coverImage}
-                src={v.url}
-                controls
-                preload="metadata"
-              />
-            </div>
+          <div key={v.public_id} className="video-box">
+            {/* Always‑visible video element with poster */}
+            <video
+              className="video-card"
+              poster={v.coverImage}
+              src={v.url}
+              controls
+              preload="metadata"
+            />
             <div className="video-meta">
               <h4>{v.name}</h4>
-              <p className="uploader-name">@{v.username}</p>
+              <p className="uploader-name">
+                @{v.username}
+              </p>
             </div>
           </div>
         ))}
@@ -493,4 +699,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
