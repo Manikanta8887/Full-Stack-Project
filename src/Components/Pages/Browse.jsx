@@ -362,7 +362,7 @@
 
 
 // Browse.jsx
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Card,
   Input,
@@ -385,50 +385,38 @@ const { Title, Paragraph } = Typography;
 const { Search } = Input;
 
 const VideoCard = ({ vid }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const videoRef = useRef(null);
-
-  const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (isPlaying) {
-      videoRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      videoRef.current.play();
-      setIsPlaying(true);
-    }
-  };
+  const [playing, setPlaying] = useState(false);
 
   return (
-    <Card
-      hoverable
-      style={{ height: "100%" }}
-      cover={
-        <div className="video-card-wrapper" onClick={togglePlay}>
+    <Card hoverable style={{ height: "100%" }}>
+      <div
+        className="video-card-cover"
+        onClick={() => setPlaying(true)}
+      >
+        {playing ? (
           <video
-            ref={videoRef}
-            className="browse-video-card"
-            poster={vid.coverImage}
             src={vid.url}
-            preload="metadata"
+            className="browse-video-card"
+            controls
+            autoPlay
             muted
-            playsInline
-            controls={isPlaying}
           />
-          {!isPlaying && (
+        ) : (
+          <>
+            <img
+              src={vid.coverImage}
+              alt={vid.title}
+              className="browse-video-poster"
+            />
             <div className="play-overlay">
               <PlayCircleOutlined />
             </div>
-          )}
-        </div>
-      }
-    >
+          </>
+        )}
+      </div>
+
       <Card.Meta
-        title={
-          <Tooltip title={vid.title}>
-            <span className="video-title">{vid.title || "Untitled Video"}</span>
-          </Tooltip>
-        }
+        title={vid.title || "Untitled Video"}
         description={
           <div className="video-uploader">
             By{" "}
@@ -447,31 +435,25 @@ const Browse = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadedVideos, setUploadedVideos] = useState([]);
 
-  // — Live streams via Socket.IO —
+  // Live streams via Socket.IO
   useEffect(() => {
     socket.emit("get-streams");
-    socket.on("stream-list", ({ liveStreams }) => {
-      setLiveStreams(liveStreams);
-    });
-    socket.on("update-streams", (streams) => {
-      setLiveStreams(streams);
-    });
-    socket.on("start-stream", (newStream) => {
-      message.success(`"${newStream.streamTitle}" is now live!`);
-    });
-    socket.on("stop-stream", (endedStream) => {
-      message.info(`"${endedStream.streamTitle}" has ended.`);
-    });
+    socket.on("stream-list", ({ liveStreams }) => setLiveStreams(liveStreams));
+    socket.on("update-streams", (streams) => setLiveStreams(streams));
+    socket.on("start-stream", ({ streamTitle }) =>
+      message.success(`"${streamTitle}" is now live!`)
+    );
+    socket.on("stop-stream", ({ streamTitle }) =>
+      message.info(`"${streamTitle}" has ended.`)
+    );
     return () => socket.removeAllListeners();
   }, []);
 
-  // — Fetch uploaded videos —
+  // Fetch uploaded videos
   useEffect(() => {
     axios
       .get(`${baseurl}/api/videos`)
-      .then((res) => {
-        setUploadedVideos(res.data.videos || []);
-      })
+      .then((res) => setUploadedVideos(res.data.videos || []))
       .catch((err) => {
         console.error("Error fetching uploaded videos:", err);
         setUploadedVideos([]);
@@ -509,7 +491,7 @@ const Browse = () => {
           filteredLive.map((stream) => {
             const link = `/livestreamingplatform/watch/${stream.id}`;
             return (
-              <Col xs={24} sm={12} md={8} lg={6} key={stream.id}>
+              <Col xs={24} sm={12} md={8} key={stream.id}>
                 <Link to={link}>
                   <Card
                     hoverable
@@ -524,9 +506,7 @@ const Browse = () => {
                       title={stream.streamTitle}
                       description={
                         <>
-                          <div>
-                            By {stream.streamerName || "Unknown"}
-                          </div>
+                          <div>By {stream.streamerName || "Unknown"}</div>
                           <div>👁️ {stream.viewers || 0} viewers</div>
                         </>
                       }
@@ -563,7 +543,7 @@ const Browse = () => {
       </Title>
       <Row gutter={[16, 16]}>
         {uploadedVideos.map((vid) => (
-          <Col xs={24} sm={12} md={8} lg={8} key={vid.public_id}>
+          <Col xs={24} md={8} key={vid.public_id}>
             <VideoCard vid={vid} />
           </Col>
         ))}
