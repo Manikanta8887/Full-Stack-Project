@@ -563,7 +563,7 @@ const Browse = () => {
       </Title>
       <Row gutter={[16, 16]}>
         {uploadedVideos.map((vid) => (
-          <Col xs={24} sm={12} md={8} lg={6} key={vid.public_id}>
+          <Col xs={24} sm={12} md={8} lg={8} key={vid.public_id}>
             <VideoCard vid={vid} />
           </Col>
         ))}
