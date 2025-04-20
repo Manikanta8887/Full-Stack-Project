@@ -419,24 +419,39 @@ export default function ProfilePage() {
       <div className="video-gallery">
         {videos.length === 0 && <p>No videos uploaded yet.</p>}
         {videos.map((v) => (
-          <div
-            key={v.public_id}
-            className="video-box"
-            onClick={() => playVideo(v.public_id)}
-          >
-            <img src={v.coverImage} alt={v.name} />
-            <video
-              id={v.public_id}
-              src={v.url}
-              controls
-              onClick={(e) => e.stopPropagation()}
-              onPlay={(e) => (e.target.style.display = "block")}
-            />
-            <div className="video-meta">
-              <h4>{v.name}</h4>
-              <p className="uploader-name">@{v.username}</p>
-            </div>
-          </div>
+          // <div
+          //   key={v.public_id}
+          //   className="video-box"
+          //   onClick={() => playVideo(v.public_id)}
+          // >
+          //   <img src={v.coverImage} alt={v.name} />
+          //   <video
+          //     id={v.public_id}
+          //     src={v.url}
+          //     controls
+          //     onClick={(e) => e.stopPropagation()}
+          //     onPlay={(e) => (e.target.style.display = "block")}
+          //   />
+          //   <div className="video-meta">
+          //     <h4>{v.name}</h4>
+          //     <p className="uploader-name">@{v.username}</p>
+          //   </div>
+          // </div>
+          <div key={v.public_id} className="video-box">
+                  <div className="video-wrapper">
+                    <video
+                      className="video-thumb"
+                      poster={v.coverImage}
+                      src={v.url}
+                      controls
+                      preload="metadata"
+                    />
+                  </div>
+                  <div className="video-meta">
+                    <h4>{v.name}</h4>
+                    <p className="uploader-name">@{v.username}</p>
+                  </div>
+                </div>
         ))}
       </div>
     </div>
