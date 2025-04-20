@@ -115,7 +115,7 @@ const LiveStreamingPlatform = () => {
             />
             <div className="auth-button-container" style={{ padding: "16px", textAlign: "center" }}>
               {firebaseUser ? (
-                <Button type="primary" danger block onClick={handleLogout}>
+                <Button type="primary" danger block onClick={handleLogout} className="logout-btn">
                   Logout
                 </Button>
               ) : (
@@ -167,9 +167,7 @@ const LiveStreamingPlatform = () => {
                 {firebaseUser && (
                   <Button
                     type="text"
-                    onClick={handleLogout}
-                    style={{ color: "#fff", padding: 0 }}
-                  >
+                    onClick={handleLogout}>
                     Logout
                   </Button>
                 )}

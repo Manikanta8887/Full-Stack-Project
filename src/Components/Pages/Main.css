@@ -246,3 +246,18 @@
 .custom-sider .ant-menu-dark .ant-menu-item:hover {
   background-color: #7A1CAC !important;
 }
+
+
+.logout-btn {
+  color: #ffffff !important;           /* solid white text */
+  padding: 0 !important;               /* preserve your padding reset */
+}
+
+
+.logout-btn:hover,
+.logout-btn:focus {
+  color: #ffffff !important;
+  filter: brightness(1.2);             /* bump brightness by 20% */
+  text-decoration: underline;          /* optional – gives a little feedback */
+  cursor: pointer;                     /* ensure it feels clickable */
+}
