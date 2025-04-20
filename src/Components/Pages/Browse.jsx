@@ -313,35 +313,54 @@ const Browse = () => {
       {/* Uploaded Videos */}
       <Title level={3} style={{ marginTop: 30 }}>📹 Uploaded Videos</Title>
       <Row gutter={[16, 16]}>
-        { (uploadedVideos?.length ?? 0) === 0 ? (
+        {(uploadedVideos?.length ?? 0) === 0 ? (
           <p>No videos uploaded yet</p>
         ) : (
           uploadedVideos.map((vid) => (
             <Col xs={24} sm={12} md={8} lg={6} key={vid.public_id}>
               <Card
                 hoverable
+                style={{ height: "100%" }}
                 cover={
                   <img
-                    alt="Video cover"
-                    src={vid.coverImage}
-                    style={{ cursor: "pointer" }}
+                    alt={vid.title}
+                    src={vid.coverImage || "/default-video.jpg"}
+                    style={{ cursor: "pointer", objectFit: "cover", height: 200 }}
                     onClick={() => playVideo(vid.public_id)}
                   />
                 }
               >
                 <Card.Meta
-                  title={vid.uploaderName || "Uploader"}
-                  description={`Uploaded by ${vid.uploaderName}`}
+                  title={
+                    <Tooltip title={vid.title}>
+                      <span>{vid.title}</span>
+                    </Tooltip>
+                  }
+                  description={
+                    <>
+                      <div>
+                        <strong>By: </strong>
+                        <Link to={`/livestreamingplatform/profile/${vid.uploaderId}`}>
+                          {vid.uploaderName || "Unknown"}
+                        </Link>
+                      </div>
+                      <div>
+                        <small>ID: {vid.public_id}</small>
+                      </div>
+                    </>
+                  }
                 />
               </Card>
               <video
                 id={vid.public_id}
                 src={vid.url}
                 controls
-                style={{ display: "none", width: "100%" }}
+                preload="metadata"
+                style={{ display: "none", width: "100%", marginTop: 8 }}
                 onClick={(e) => e.stopPropagation()}
                 onPlay={(e) => (e.target.style.display = "block")}
               />
+
             </Col>
           ))
         )}

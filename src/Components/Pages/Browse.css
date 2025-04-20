@@ -10,3 +10,8 @@
     transform: scale(1.05);
   }
   
+
+  .browse-container .ant-card-body {
+    min-height: 120px;
+  }
+  
