@@ -249,15 +249,15 @@
 
 
 .logout-btn {
-  color: #ffffff !important;           /* solid white text */
-  padding: 0 !important;               /* preserve your padding reset */
+  color: #ffffff !important;          
+  padding: 0 !important;              
 }
 
 
 .logout-btn:hover,
 .logout-btn:focus {
   color: #ffffff !important;
-  filter: brightness(1.2);             /* bump brightness by 20% */
-  text-decoration: underline;          /* optional – gives a little feedback */
-  cursor: pointer;                     /* ensure it feels clickable */
+  filter: brightness(1.2);             
+  text-decoration: underline;          
+  cursor: pointer;                     
 }
