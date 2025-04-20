@@ -167,7 +167,8 @@ const LiveStreamingPlatform = () => {
                 {firebaseUser && (
                   <Button
                     type="text"
-                    onClick={handleLogout}>
+                    onClick={handleLogout} 
+                    className="logout-btn">
                     Logout
                   </Button>
                 )}
