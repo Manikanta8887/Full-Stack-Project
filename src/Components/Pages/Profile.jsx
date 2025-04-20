@@ -846,7 +846,7 @@ export default function ProfilePage() {
 
   const handleDelete = async (public_id) => {
     try {
-      await axios.delete(`${baseurl}/api/videos/${public_id}`);
+      await axios.delete(`${baseurl}/api/videos/${encodeURIComponrent(public_id)}`);
       setVideos((prev) =>
         prev.filter((v) => v.public_id !== public_id)
       );
