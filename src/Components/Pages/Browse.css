@@ -11,7 +11,33 @@
   }
   
 
-  .browse-container .ant-card-body {
+  /* .browse-container .ant-card-body {
     min-height: 120px;
-  }
+  } */
+
+  /* make sure the video fits nicely */
+.browse-video-card {
+  width: 100%;
+  height: 180px;        /* tweak to match your design */
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* optional: truncate long titles */
+.video-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ensure the Card body stretches for consistent heights */
+.browse-container .ant-card {
+  display: flex;
+  flex-direction: column;
+}
+.browse-container .ant-card-body {
+  flex: 1;
+}
+
   

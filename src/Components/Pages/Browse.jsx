@@ -313,57 +313,46 @@ const Browse = () => {
       {/* Uploaded Videos */}
       <Title level={3} style={{ marginTop: 30 }}>📹 Uploaded Videos</Title>
       <Row gutter={[16, 16]}>
-        {(uploadedVideos?.length ?? 0) === 0 ? (
-          <p>No videos uploaded yet</p>
-        ) : (
-          uploadedVideos.map((vid) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={vid.public_id}>
-              <Card
-                hoverable
-                style={{ height: "100%" }}
-                cover={
-                  <img
-                    alt={vid.title}
-                    src={vid.coverImage || "/default-video.jpg"}
-                    style={{ cursor: "pointer", objectFit: "cover", height: 200 }}
-                    onClick={() => playVideo(vid.public_id)}
-                  />
-                }
-              >
-                <Card.Meta
-                  title={
-                    <Tooltip title={vid.title}>
-                      <span>{vid.title}</span>
-                    </Tooltip>
-                  }
-                  description={
-                    <>
-                      <div>
-                        <strong>By: </strong>
-                        <Link to={`/livestreamingplatform/profile/${vid.uploaderId}`}>
-                          {vid.uploaderName || "Unknown"}
-                        </Link>
-                      </div>
-                      <div>
-                        <small>ID: {vid.public_id}</small>
-                      </div>
-                    </>
-                  }
+        {uploadedVideos.map((vid) => (
+          <Col xs={24} sm={12} md={8} lg={6} key={vid.public_id}>
+            <Card
+              hoverable
+              style={{ height: "100%" }}
+              cover={
+                <video
+                  className="browse-video-card"
+                  poster={vid.coverImage}
+                  src={vid.url}
+                  preload="metadata"
+                  muted
+                  playsInline
+                  onClick={(e) => {
+                    const v = e.currentTarget;
+                    v.paused ? v.play() : v.pause();
+                  }}
                 />
-              </Card>
-              <video
-                id={vid.public_id}
-                src={vid.url}
-                controls
-                preload="metadata"
-                style={{ display: "none", width: "100%", marginTop: 8 }}
-                onClick={(e) => e.stopPropagation()}
-                onPlay={(e) => (e.target.style.display = "block")}
+              }
+            >
+              <Card.Meta
+                title={
+                  <Tooltip title={vid.title}>
+                    <span className="video-title">{vid.title}</span>
+                  </Tooltip>
+                }
+                description={
+                  <div className="video-uploader">
+                    By{" "}
+                    <Link to={`/livestreamingplatform/profile/${vid.uploaderId}`}>
+                      {vid.uploaderName || "Unknown"}
+                    </Link>
+                  </div>
+                }
               />
+            </Card>
+          </Col>
+        ))}
 
-            </Col>
-          ))
-        )}
+
       </Row>
     </div>
   );
