@@ -210,7 +210,7 @@
 // }
 
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Form,
   Input,
@@ -228,6 +228,8 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import "./Profile.css";
 import baseurl from "../../base.js";
+
+const videoRefs = useRef({});
 
 const { Title } = Typography;
 const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
