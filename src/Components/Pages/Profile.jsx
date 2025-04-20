@@ -453,8 +453,13 @@ import {
   message,
   Typography,
   Progress,
+  Modal,
 } from "antd";
-import { UploadOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  UserOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
 import { updateUser } from "../Redux/userSlice.js";
 import axios from "axios";
@@ -463,7 +468,7 @@ import "./Profile.css";
 import baseurl from "../../base.js";
 
 const { Title } = Typography;
-const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
+const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
 
 export default function ProfilePage() {
   const { uid } = useParams();
@@ -478,7 +483,11 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [showBioInput, setShowBioInput] = useState(false);
 
-  // Load profile + videos
+  const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [videoTitle, setVideoTitle] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   useEffect(() => {
     const targetUid = isPublic ? uid : loggedIn?.uid;
     if (!targetUid) return navigate("/login");
@@ -499,7 +508,6 @@ export default function ProfilePage() {
       .catch(() => setVideos([]));
   }, [uid, loggedIn, isPublic, form, navigate]);
 
-  // Compute storage usage
   const usedBytes = useMemo(
     () => videos.reduce((sum, v) => sum + (v.sizeInBytes || 0), 0),
     [videos]
@@ -507,30 +515,73 @@ export default function ProfilePage() {
   const usedMB = (usedBytes / (1024 * 1024)).toFixed(1);
   const percent = ((usedBytes / MAX_STORAGE) * 100).toFixed(1);
 
-  // Prevent over‐quota uploads
+  const openUploadModal = () => setUploadModalVisible(true);
+  const closeUploadModal = () => {
+    setUploadModalVisible(false);
+    setSelectedFile(null);
+    setVideoTitle("");
+    setUploadProgress(0);
+  };
+
+  const handleFileSelect = (file) => {
+    setSelectedFile(file);
+    return false;
+  };
+
+  const submitUpload = async () => {
+    if (!selectedFile) {
+      message.error("Please select a video file.");
+      return;
+    }
+    setUploading(true);
+
+    const title = videoTitle.trim() || "TouchLive";
+
+    const fd = new FormData();
+    fd.append("video", selectedFile);
+    fd.append("title", title);
+
+    try {
+      const res = await axios.post(
+        `${baseurl}/api/videos/upload/${loggedIn.uid}`,
+        fd,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: ({ loaded, total }) =>
+            setUploadProgress(Math.round((loaded / total) * 100)),
+        }
+      );
+      setVideos((prev) => [...prev, res.data.video]);
+      message.success("Video uploaded!");
+      closeUploadModal();
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      message.error("Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (public_id) => {
+    try {
+      await axios.delete(`${baseurl}/api/videos/${public_id}`);
+      setVideos((prev) =>
+        prev.filter((v) => v.public_id !== public_id)
+      );
+      message.success("Video deleted.");
+    } catch {
+      message.error("Failed to delete video.");
+    }
+  };
+
   const beforeUpload = (file) => {
     if (usedBytes + file.size > MAX_STORAGE) {
-      message.error("This upload would exceed your 1 GB quota.");
+      message.error("This upload would exceed your 1 GB quota.");
       return Upload.LIST_IGNORE;
     }
     return true;
   };
 
-  // Handle Upload events
-  const handleVideoUpload = ({ file }) => {
-    if (file.status === "uploading") {
-      setUploading(true);
-    } else if (file.status === "done") {
-      setVideos((prev) => [...prev, file.response.video]);
-      message.success("Video uploaded!");
-      setUploading(false);
-    } else if (file.status === "error") {
-      message.error("Video upload failed.");
-      setUploading(false);
-    }
-  };
-
-  // Save bio
   const onBioFinish = async ({ bio }) => {
     try {
       const updated = { ...loggedIn, bio };
@@ -544,6 +595,7 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-container">
+      {/* — header & upload button — */}
       <div className="profile-header">
         <Avatar
           className="profile-avatar"
@@ -562,84 +614,25 @@ export default function ProfilePage() {
               "Hey there! I'm using Touch Live."}
           </p>
         </div>
-
         {!isPublic && (
           <div className="profile-upload-btn">
-            <Upload
-              accept="video/*"
-              beforeUpload={beforeUpload}
-              showUploadList={false}
-              customRequest={async ({
-                file,
-                onProgress,
-                onError,
-                onSuccess,
-              }) => {
-                // Prompt for video name
-                const entered = window.prompt(
-                  "Enter a name for your video:",
-                  "TouchLive"
-                );
-                const name =
-                  entered && entered.trim()
-                    ? entered.trim()
-                    : "TouchLive";
-                const username =
-                  profileData?.displayName ||
-                  profileData?.name ||
-                  "Streamer";
-
-                const fd = new FormData();
-                fd.append("video", file);
-                fd.append("name", name);
-                fd.append("username", username);
-
-                try {
-                  const res = await axios.post(
-                    `${baseurl}/api/videos/upload/${loggedIn.uid}`,
-                    fd,
-                    {
-                      headers: {
-                        "Content-Type": "multipart/form-data",
-                      },
-                      onUploadProgress: ({ loaded, total }) =>
-                        onProgress({
-                          percent: Math.round(
-                            (loaded / total) * 100
-                          ),
-                        }),
-                    }
-                  );
-                  onSuccess(res.data, file);
-                } catch (err) {
-                  console.error("Upload failed:", err.response?.data || err.message);
-                  onError(err);
-                }
-              }}
-              onChange={handleVideoUpload}
+            <Button
+              icon={<UploadOutlined />}
+              onClick={openUploadModal}
             >
-              <Button
-                icon={<UploadOutlined />}
-                loading={uploading}
-              >
-                Upload Video
-              </Button>
-            </Upload>
-
+              Upload Video
+            </Button>
             <Button
               style={{ marginLeft: 10 }}
-              onClick={() =>
-                setShowBioInput((v) => !v)
-              }
+              onClick={() => setShowBioInput((v) => !v)}
             >
-              {showBioInput
-                ? "Cancel Bio Edit"
-                : "Edit Bio"}
+              {showBioInput ? "Cancel Bio Edit" : "Edit Bio"}
             </Button>
           </div>
         )}
       </div>
 
+      {/* — Bio form — */}
       {!isPublic && showBioInput && (
         <Form
           className="bio-form"
@@ -651,36 +644,31 @@ export default function ProfilePage() {
             <Input.TextArea rows={3} />
           </Form.Item>
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              block
-            >
+            <Button type="primary" htmlType="submit" block>
               Save Bio
             </Button>
           </Form.Item>
         </Form>
       )}
 
+      {/* — Storage bar — */}
       <div className="profile-storage">
         <Progress percent={Number(percent)} />
         <div className="profile-storage-text">
-          Used {usedMB} MB of{" "}
-          {Math.round(
-            MAX_STORAGE / (1024 * 1024)
-          )}{" "}
-          MB ({percent}%)
+          Used {usedMB} MB of {Math.round(MAX_STORAGE / (1024 * 1024))} MB ({percent}%)
         </div>
       </div>
 
+      {/* — Video gallery — */}
       <Title level={4}>Your Videos</Title>
       <div className="video-gallery">
-        {videos.length === 0 && (
-          <p>No videos uploaded yet.</p>
-        )}
+        {videos.length === 0 && <p>No videos uploaded yet.</p>}
         {videos.map((v) => (
           <div key={v.public_id} className="video-box">
-            {/* Always‑visible video element with poster */}
+            <DeleteOutlined
+              className="delete-btn"
+              onClick={() => handleDelete(v.public_id)}
+            />
             <video
               className="video-card"
               poster={v.coverImage}
@@ -689,14 +677,49 @@ export default function ProfilePage() {
               preload="metadata"
             />
             <div className="video-meta">
-              <h4>{v.name}</h4>
-              <p className="uploader-name">
-                @{v.username}
-              </p>
+              <h4>{v.title || "Untitled Video"}</h4>
             </div>
           </div>
         ))}
       </div>
+
+      {/* — Upload Modal — */}
+      <Modal
+        title="Upload a Video"
+        visible={uploadModalVisible}
+        onOk={submitUpload}
+        onCancel={closeUploadModal}
+        okText={uploading ? "Uploading..." : "Upload"}
+        confirmLoading={uploading}
+      >
+        <Form layout="vertical">
+          <Form.Item label="Video Title" required>
+            <Input
+              placeholder="TouchLive"
+              value={videoTitle}
+              onChange={(e) => setVideoTitle(e.target.value)}
+            />
+          </Form.Item>
+
+          <Form.Item label="Select Video" required>
+            <Upload
+              accept="video/*"
+              beforeUpload={handleFileSelect}
+              showUploadList={false}
+              customRequest={() => {}}
+            >
+              <Button icon={<UploadOutlined />}>Choose File</Button>
+            </Upload>
+            {selectedFile && (
+              <div className="selected-file">{selectedFile.name}</div>
+            )}
+          </Form.Item>
+
+          {uploadProgress > 0 && (
+            <Progress percent={uploadProgress} />
+          )}
+        </Form>
+      </Modal>
     </div>
   );
 }

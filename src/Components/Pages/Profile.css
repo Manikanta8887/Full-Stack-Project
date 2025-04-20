@@ -202,6 +202,7 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  margin-top: 10px;
 }
 
 /* Storage Section */
@@ -229,9 +230,8 @@
   margin-bottom: 30px;
   padding: 10px;
 }
-
-/* Video Card */
 .video-box {
+  position: relative;
   flex: 1 1 200px;
   max-width: 300px;
   background: #fff;
@@ -244,7 +244,18 @@
   transform: translateY(-4px);
 }
 
-/* The video itself */
+/* Delete icon */
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+/* Video element */
 .video-card {
   width: 100%;
   height: auto;
@@ -270,6 +281,12 @@
   color: #888;
 }
 
+/* Selected file name */
+.selected-file {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
 /* Bio Form */
 .bio-form {
   width: 100%;
@@ -293,21 +310,79 @@
   .profile-header {
     flex-direction: column;
     align-items: center;
+    gap: 10px;
+  }
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+  }
+  .profile-info h3 {
+    font-size: 20px;
+  }
+  .profile-info p {
+    font-size: 14px;
   }
   .profile-upload-btn {
-    margin-top: 10px;
+    margin-top: 15px;
+    flex-direction: column;
+    align-items: center;
+  }
+  .bio-form {
+    padding: 15px;
+    width: 100%;
+    max-width: none;
+  }
+  .video-gallery {
+    gap: 12px;
+    padding: 5px;
   }
   .video-box {
+    flex: 1 1 200px;
     max-width: 100%;
+  }
+  .profile-storage-text {
+    font-size: 12px;
   }
 }
 
 @media (max-width: 480px) {
   .profile-avatar {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
+  }
+  .profile-info h3 {
+    font-size: 18px;
+  }
+  .profile-info p {
+    font-size: 12px;
   }
   .bio-form {
-    padding: 15px;
+    padding: 10px;
+    width: 100%;
+    max-width: none;
+  }
+  .video-gallery {
+    gap: 10px;
+    padding: 5px;
+  }
+  .video-box {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  .profile-storage-text {
+    font-size: 12px;
+  }
+}
+
+/* Modal Adjustments for smaller screens */
+@media (max-width: 768px) {
+  .ant-modal {
+    padding: 10px;
+  }
+  .ant-modal-content {
+    border-radius: 8px;
+  }
+  .ant-form-item {
+    margin-bottom: 12px;
   }
 }
