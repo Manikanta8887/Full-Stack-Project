@@ -10,12 +10,12 @@ import {
   HomeOutlined,
   VideoCameraOutlined,
   UserOutlined,
-  BellOutlined,
-  FireOutlined,
 } from "@ant-design/icons";
 import Logo from "../../assets/logo1.png";
 import "./Main.css";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Title } = Typography;
