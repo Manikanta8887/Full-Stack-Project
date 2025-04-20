@@ -945,18 +945,29 @@ export default function ProfilePage() {
       <Title level={4}>Your Videos</Title>
       <div className="video-gallery">
         {videos.length === 0 && <p>No videos uploaded yet.</p>}
-        {videos.map((v,i) => (
+        {videos.map((v, i) => (
           <div key={v.public_id || i} className="video-box">
             <DeleteOutlined
               className="delete-btn"
               onClick={() => handleDelete(v.public_id)}
             />
-            <video
+            {/* <video
               className="video-card"
               poster={v.coverImage}
               src={v.url}
               controls
               preload="metadata"
+            /> */}
+            <video
+              className="video-card"
+              poster={v.coverImage}
+              src={v.url}
+              controls
+              preload="auto"
+              autoPlay
+              loop
+              muted
+              playsInline
             />
             <div className="video-meta">
               <h4>{v.title || "Untitled Video"}</h4>
@@ -988,7 +999,7 @@ export default function ProfilePage() {
               accept="video/*"
               beforeUpload={handleFileSelect}
               showUploadList={false}
-              customRequest={() => {dummyRequest}}
+              customRequest={() => { dummyRequest }}
             >
               <Button icon={<UploadOutlined />}>Choose File</Button>
             </Upload>
