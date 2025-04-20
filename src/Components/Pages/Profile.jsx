@@ -310,11 +310,18 @@ export default function ProfilePage() {
   };
 
   // Play clicked video (show <video> and start)
-  const playVideo = (id) => {
-    const vid = document.getElementById(id);
+  // const playVideo = (id) => {
+  //   const vid = document.getElementById(id);
+  //   if (vid) {
+  //     vid.style.display = "block";
+  //     vid.play();
+  //   }
+  // };
+  const handleCardClick = (publicId) => {
+    const vid = videoRefs.current[publicId];
     if (vid) {
-      vid.style.display = "block";
       vid.play();
+      vid.focus();
     }
   };
 
@@ -415,7 +422,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <Title level={4}>Your Videos</Title>
+      {/* <Title level={4}>Your Videos</Title>
       <div className="video-gallery">
         {videos.length === 0 && <p>No videos uploaded yet.</p>}
         {videos.map((v) => (
@@ -452,6 +459,32 @@ export default function ProfilePage() {
                     <p className="uploader-name">@{v.username}</p>
                   </div>
                 </div>
+        ))}
+      </div> */}
+      <Title level={4}>Your Videos</Title>
+      <div className="video-gallery">
+        {videos.length === 0 && <p>No videos uploaded yet.</p>}
+        {videos.map((v) => (
+          <div
+            key={v.public_id}
+            className="video-box"
+            onClick={() => handleCardClick(v.public_id)}
+          >
+            <div className="video-wrapper">
+              <video
+                ref={(el) => (videoRefs.current[v.public_id] = el)}
+                className="video-thumb"
+                poster={v.coverImage}
+                src={v.url}
+                controls
+                preload="metadata"
+              />
+            </div>
+            <div className="video-meta">
+              <h4>{v.name}</h4>
+              <p className="uploader-name">@{v.username}</p>
+            </div>
+          </div>
         ))}
       </div>
     </div>
