@@ -210,7 +210,6 @@
 // }
 
 
-// ProfilePage.jsx
 import React, { useEffect, useState, useMemo } from "react";
 import {
   Form,
@@ -278,7 +277,7 @@ export default function ProfilePage() {
   // Prevent over‐quota uploads
   const beforeUpload = (file) => {
     if (usedBytes + file.size > MAX_STORAGE) {
-      message.error("This upload would exceed your 1 GB quota.");
+      message.error("This upload would exceed your 1 GB quota.");
       return Upload.LIST_IGNORE;
     }
     return true;
@@ -310,7 +309,7 @@ export default function ProfilePage() {
     }
   };
 
-  // Play clicked video
+  // Play clicked video (show <video> and start)
   const playVideo = (id) => {
     const vid = document.getElementById(id);
     if (vid) {
@@ -329,7 +328,9 @@ export default function ProfilePage() {
           icon={<UserOutlined />}
         />
         <div className="profile-info">
-          <h3>{profileData?.displayName || profileData?.name || "Streamer"}</h3>
+          <h3>
+            {profileData?.displayName || profileData?.name || "Streamer"}
+          </h3>
           <p>{profileData?.bio || "Hey there! I'm using Touch Live."}</p>
         </div>
 
@@ -340,12 +341,21 @@ export default function ProfilePage() {
               beforeUpload={beforeUpload}
               showUploadList={false}
               customRequest={async ({ file, onProgress, onError, onSuccess }) => {
-                // Prompt for video name, default to "TouchLive"
-                const name = window.prompt("Enter a name for your video:", "TouchLive") || "TouchLive";
+                // Prompt for name
+                const entered = window.prompt(
+                  "Enter a name for your video:",
+                  "TouchLive"
+                );
+                const name = entered && entered.trim() ? entered.trim() : "TouchLive";
+                const username =
+                  profileData?.displayName ||
+                  profileData?.name ||
+                  "Streamer";
+
                 const fd = new FormData();
                 fd.append("video", file);
                 fd.append("name", name);
-                fd.append("username", profileData?.displayName || profileData?.name || "Streamer");
+                fd.append("username", username);
 
                 try {
                   const res = await axios.post(
@@ -385,7 +395,6 @@ export default function ProfilePage() {
           form={form}
           layout="vertical"
           onFinish={onBioFinish}
-          style={{ marginBottom: 20 }}
         >
           <Form.Item name="bio" label="Edit Your Bio">
             <Input.TextArea rows={3} />
@@ -401,7 +410,8 @@ export default function ProfilePage() {
       <div className="profile-storage">
         <Progress percent={Number(percent)} />
         <div className="profile-storage-text">
-          Used {usedMB} MB of {Math.round(MAX_STORAGE / (1024 * 1024))} MB ({percent}%)
+          Used {usedMB} MB of {Math.round(MAX_STORAGE / (1024 * 1024))} MB (
+          {percent}%)
         </div>
       </div>
 
@@ -409,11 +419,12 @@ export default function ProfilePage() {
       <div className="video-gallery">
         {videos.length === 0 && <p>No videos uploaded yet.</p>}
         {videos.map((v) => (
-          <div key={v.public_id} className="video-box" onClick={() => playVideo(v.public_id)}>
-            <img
-              src={v.coverImage}
-              alt={v.name}
-            />
+          <div
+            key={v.public_id}
+            className="video-box"
+            onClick={() => playVideo(v.public_id)}
+          >
+            <img src={v.coverImage} alt={v.name} />
             <video
               id={v.public_id}
               src={v.url}
@@ -431,3 +442,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

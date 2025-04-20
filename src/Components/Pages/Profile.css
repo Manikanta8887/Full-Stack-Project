@@ -157,6 +157,8 @@
 }
 .profile-upload-btn {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 /* Storage Section */
@@ -189,11 +191,19 @@
   width: 200px;
   max-width: 100%;
   cursor: pointer;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+.video-box:hover {
+  transform: translateY(-4px);
 }
 .video-box img,
 .video-box video {
   width: 100%;
-  border-radius: 8px;
+  display: block;
   background-color: #000;
 }
 .video-box video {
@@ -205,12 +215,16 @@
 
 /* Video Meta Info */
 .video-meta {
+  padding: 8px;
   text-align: center;
-  margin-top: 8px;
 }
 .video-meta h4 {
   margin: 0;
   font-size: 16px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .video-meta .uploader-name {
   margin: 4px 0 0;
@@ -224,6 +238,8 @@
   max-width: 600px;
   padding: 20px;
   border-radius: 8px;
+  background: #fff;
+  margin-bottom: 30px;
 }
 .bio-form .ant-form-item {
   margin-bottom: 16px;
