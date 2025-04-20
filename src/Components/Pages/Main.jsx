@@ -93,7 +93,7 @@ const LiveStreamingPlatform = () => {
           items={[
             { key: "/livestreamingplatform", icon: <HomeOutlined />, label: "Browse" },
             { key: "/livestreamingplatform/stream/:id", icon: <VideoCameraOutlined />, label: "Start Streaming" },
-            { key: "/livestreamingplatform/following", icon: <FireOutlined />, label: "Following" },
+            // { key: "/livestreamingplatform/following", icon: <FireOutlined />, label: "Following" },
             { key: "/livestreamingplatform/profile", icon: <UserOutlined />, label: "Profile" },
           ]}
         />
