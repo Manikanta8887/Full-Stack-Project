@@ -129,7 +129,7 @@ const LiveStreamingPlatform = () => {
       </Sider>
       <Layout>
         <Header className="custom-header">
-          <Row align="middle" justify="space-between" className="header-row" style={{ width: "100%" }}>
+          <Row align="middle" justify="space-between" style={{ width: "100%" }}>
             <Col flex="none">
               <Button
                 type="text"
@@ -138,6 +138,7 @@ const LiveStreamingPlatform = () => {
                 className="toggle-btn"
               />
             </Col>
+
             <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
               <Search
                 placeholder="Search streams..."
@@ -147,20 +148,36 @@ const LiveStreamingPlatform = () => {
                 style={{ width: "100%", maxWidth: "400px" }}
               />
             </Col>
+
             <Col flex="none">
               <Space size="large">
                 {firebaseUser ? (
-                  <Avatar src={firebaseUser.photoURL} icon={!firebaseUser.photoURL && <UserOutlined />} alt="Profile" />
+                  <Link to="/livestreamingplatform/profile">
+                    <Avatar
+                      src={firebaseUser.photoURL}
+                      icon={!firebaseUser.photoURL && <UserOutlined />}
+                      alt="Profile"
+                      style={{ cursor: "pointer" }}
+                    />
+                  </Link>
                 ) : (
                   <Avatar icon={<UserOutlined />} />
                 )}
-                <Badge count={3}>
-                  <BellOutlined style={{ fontSize: "20px", color: "#fff" }} />
-                </Badge>
+
+                {firebaseUser && (
+                  <Button
+                    type="text"
+                    onClick={handleLogout}
+                    style={{ color: "#fff", padding: 0 }}
+                  >
+                    Logout
+                  </Button>
+                )}
               </Space>
             </Col>
           </Row>
         </Header>
+
         <Content className="custom-content">
           <Outlet />
         </Content>
