@@ -612,6 +612,7 @@ export default function ProfilePage() {
                   );
                   onSuccess(res.data, file);
                 } catch (err) {
+                  console.error("Upload failed:", err.response?.data || err.message);
                   onError(err);
                 }
               }}
