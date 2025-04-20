@@ -846,7 +846,7 @@ export default function ProfilePage() {
 
   const handleDelete = async (public_id) => {
     try {
-      await axios.delete(`${baseurl}/api/videos/${encodeURIComponrent(public_id)}`);
+      await axios.delete(`${baseurl}/api/videos/${encodeURIComponent(public_id)}`);
       setVideos((prev) =>
         prev.filter((v) => v.public_id !== public_id)
       );
@@ -857,7 +857,7 @@ export default function ProfilePage() {
   };
 
   const beforeUpload = (file) => {
-    if (usedBytes + file.size > MAX_STORAGE) {
+    if (!file?.size || usedBytes + file.size > MAX_STORAGE) {
       message.error("This upload would exceed your 1 GB quota.");
       return Upload.LIST_IGNORE;
     }
@@ -945,8 +945,8 @@ export default function ProfilePage() {
       <Title level={4}>Your Videos</Title>
       <div className="video-gallery">
         {videos.length === 0 && <p>No videos uploaded yet.</p>}
-        {videos.map((v) => (
-          <div key={v.public_id} className="video-box">
+        {videos.map((v,i) => (
+          <div key={v.public_id || i} className="video-box">
             <DeleteOutlined
               className="delete-btn"
               onClick={() => handleDelete(v.public_id)}
@@ -968,7 +968,7 @@ export default function ProfilePage() {
       {/* — Upload Modal — */}
       <Modal
         title="Upload a Video"
-        visible={uploadModalVisible}
+        open={uploadModalVisible}
         onOk={submitUpload}
         onCancel={closeUploadModal}
         okText={uploading ? "Uploading..." : "Upload"}
@@ -988,7 +988,7 @@ export default function ProfilePage() {
               accept="video/*"
               beforeUpload={handleFileSelect}
               showUploadList={false}
-              customRequest={() => {}}
+              customRequest={() => {dummyRequest}}
             >
               <Button icon={<UploadOutlined />}>Choose File</Button>
             </Upload>
