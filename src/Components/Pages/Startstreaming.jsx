@@ -236,7 +236,6 @@ const StartStreaming = () => {
       setIsLoading(false);
     }
   };
-
   const stopStream = () => {
     stream?.getTracks().forEach((track) => track.stop());
     peerConnectionRef.current?.close();
