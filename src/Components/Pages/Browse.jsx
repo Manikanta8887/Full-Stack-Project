@@ -1,4 +1,3 @@
-// Browse.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Card,
@@ -14,7 +13,7 @@ import {
 import { CopyOutlined, PlayCircleOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import socket from "../../socket";
-import axios from "axios";w
+import axios from "axios";
 import "./Browse.css";
 import baseurl from "../../base.js";
 
