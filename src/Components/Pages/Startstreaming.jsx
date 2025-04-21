@@ -54,11 +54,6 @@ const StartStreaming = () => {
         username: "Manikanta",
         credential: "786edebc-19dc-11f0-8c4a-0242ac130003",
       },
-      {
-        urls: "turn:global.xirsys.net:3478?transport=tcp",
-        username: "Manikanta",
-        credential: "786edebc-19dc-11f0-8c4a-0242ac130003",
-      },
     ],
   };
 
@@ -81,6 +76,7 @@ const StartStreaming = () => {
     socket.on("ice-candidate", async ({ candidate }) => {
       try {
         await peerConnectionRef.current?.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log("[ICE] Connection state:", peerConnectionRef.current.iceConnectionState);
       } catch (e) {
         console.error("Error adding ICE candidate:", e);
       }
