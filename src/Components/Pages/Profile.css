@@ -1,11 +1,9 @@
-/* src/components/Profile.css */
 .profile-container {
   margin: 0 auto;
   background-color: #f9f9f9;
   padding: 10px;
 }
 
-/* Profile Header */
 .profile-header {
   display: flex;
   align-items: center;
@@ -47,7 +45,6 @@
   margin-top: 10px;
 }
 
-/* Storage Section */
 .profile-storage {
   width: 100%;
   padding: 20px;
@@ -65,7 +62,6 @@
   color: #555;
 }
 
-/* Video Gallery */
 .video-gallery {
   display: flex;
   flex-wrap: wrap;
@@ -90,7 +86,6 @@
   transform: translateY(-4px);
 }
 
-/* Delete icon */
 .delete-btn {
   position: absolute;
   top: 8px;
@@ -101,7 +96,6 @@
   cursor: pointer;
 }
 
-/* Video element */
 .video-card {
   width: 100%;
   display: block;
@@ -110,9 +104,6 @@
   height: 180px;
 }
 
-
-
-/* Title + username */
 .video-meta {
   padding: 8px;
   text-align: center;
@@ -126,13 +117,11 @@
   text-overflow: ellipsis;
 }
 
-/* Selected file name */
 .selected-file {
   margin-top: 8px;
   font-size: 14px;
 }
 
-/* Bio Form */
 .bio-form {
   width: 100%;
   max-width: 600px;
@@ -152,7 +141,6 @@
   border-radius: 4px;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .profile-header {
     flex-direction: column;
@@ -235,7 +223,6 @@
   }
 }
 
-/* Modal Adjustments for smaller screens */
 @media (max-width: 768px) {
   .ant-modal {
     padding: 10px;

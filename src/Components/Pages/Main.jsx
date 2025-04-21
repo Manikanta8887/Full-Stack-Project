@@ -1,4 +1,3 @@
-// LiveStreamingPlatform.jsx
 import React, { useEffect, useState } from "react";
 import { Layout, Menu, Input, Button, Avatar, Row, Col, Typography, Space, Badge } from "antd";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,12 +29,10 @@ const LiveStreamingPlatform = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Update selected menu key based on current location
   useEffect(() => {
     setSelectedKey(location.pathname);
   }, [location.pathname]);
 
-  // Listen for Firebase auth state changes and update Redux state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -54,7 +51,6 @@ const LiveStreamingPlatform = () => {
     return () => unsubscribe();
   }, [auth, dispatch]);
 
-  // Logout handler
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -93,7 +89,6 @@ const LiveStreamingPlatform = () => {
           items={[
             { key: "/livestreamingplatform", icon: <HomeOutlined />, label: "Browse" },
             { key: "/livestreamingplatform/stream/:id", icon: <VideoCameraOutlined />, label: "Start Streaming" },
-            // { key: "/livestreamingplatform/following", icon: <FireOutlined />, label: "Following" },
             { key: "/livestreamingplatform/profile", icon: <UserOutlined />, label: "Profile" },
           ]}
         />

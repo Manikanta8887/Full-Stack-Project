@@ -1,4 +1,3 @@
-// StartStreaming.jsx
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setIsStreaming, setStreamTitle } from "../Redux/streamSlice.js";
@@ -26,7 +25,6 @@ const StartStreaming = () => {
   const reduxStreaming = useSelector((state) => state.stream.isStreaming);
   const reduxTitle = useSelector((state) => state.stream.streamTitle);
 
-  // Use Redux or localStorage fallback for persistence
   const isStreaming = reduxStreaming || localStorage.getItem("isStreaming") === "true";
   const streamTitle = reduxTitle || localStorage.getItem("streamTitle") || "";
 
@@ -65,7 +63,6 @@ const StartStreaming = () => {
     ],
   };
 
-  // Synchronize Redux state changes into localStorage
   useEffect(() => {
     if (reduxStreaming) localStorage.setItem("isStreaming", "true");
     else localStorage.removeItem("isStreaming");

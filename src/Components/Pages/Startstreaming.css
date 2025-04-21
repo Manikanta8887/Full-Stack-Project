@@ -1,10 +1,8 @@
-/* Startstreaming.css */
 .start-streaming-container {
   margin-top: 20px;
   padding: 0 10px;
 }
 
-/* STREAM CARD STYLES */
 .stream-card {
   padding: 20px;
   text-align: center;
@@ -19,7 +17,6 @@
   font-weight: 600;
 }
 
-/* VIDEO PLAYER */
 .stream-video {
   width: 100%;
   max-height: 400px;
@@ -29,13 +26,11 @@
   object-fit: cover;
 }
 
-/* ERROR MESSAGE */
 .error-text {
   color: red;
   margin-top: 10px;
 }
 
-/* CHAT STYLES */
 .chat-box {
   margin-top: 20px;
   padding: 20px;
@@ -68,7 +63,6 @@
   width: 100%;
 }
 
-/* RESPONSIVENESS */
 @media (max-width: 768px) {
   .stream-video {
     max-height: 300px;

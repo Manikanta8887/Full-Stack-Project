@@ -1,4 +1,3 @@
-// WatchStream.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, Typography, message, Input, Button, List, Space, Tooltip } from "antd";
@@ -35,7 +34,6 @@ const WatchStream = () => {
   };
 
   useEffect(() => {
-    // Emit first so streamer can send offer
     socket.emit("join-stream", { streamId: id });
     socket.emit("get-stream-info", { streamId: id });
 
@@ -100,7 +98,6 @@ const WatchStream = () => {
       }
     };
 
-    // 🧠 Make sure this runs AFTER joining room
     socket.on("offer", async ({ offer }) => {
       console.log("VIEWER: Received offer:", offer);
       try {

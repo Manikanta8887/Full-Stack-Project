@@ -103,7 +103,6 @@
 
 .header-icon {
   color: white !important;
-  /* Change this to your desired color */
 }
 
 
@@ -232,17 +231,14 @@
   }
 }
 
-/* Override the active (selected) menu item background color */
 .custom-sider .ant-menu-dark .ant-menu-item-selected {
   background-color: #AD49E1 !important;
 }
 
-/* Optionally, set the active menu item text color to white */
 .custom-sider .ant-menu-dark .ant-menu-item-selected>.ant-menu-title-content {
   color: #ffffff !important;
 }
 
-/* Optionally, change hover background color for menu items */
 .custom-sider .ant-menu-dark .ant-menu-item:hover {
   background-color: #7A1CAC !important;
 }
