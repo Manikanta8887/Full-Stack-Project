@@ -21,9 +21,10 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import "./Profile.css";
 import baseurl from "../../base.js";
+// import { useForm } from "react-hook-form";
 
 const { Title } = Typography;
-const MAX_STORAGE = 1024 * 1024 * 1024; // 1 GB
+const MAX_STORAGE = 1024 * 1024 * 1024;
 
 export default function ProfilePage() {
   const { uid } = useParams();

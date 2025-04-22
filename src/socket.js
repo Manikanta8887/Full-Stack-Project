@@ -1,11 +1,9 @@
 import { io } from "socket.io-client";
-import baseurl from "./base.js";
 
-const socket = io(baseurl, { transports: ["websocket"] });
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const socket = io(SOCKET_URL, { transports: ["websocket"] });
 
-socket.on("connect", () => {
-  console.log("Connected to WebSocket server:", socket.id);
-});
+socket.on("connect", () => console.log(" Socket connected:", socket.id));
+socket.on("connect_error", (err) => console.error(" Socket error:", err));
 
 export default socket;
-

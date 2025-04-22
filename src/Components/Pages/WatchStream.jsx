@@ -1,9 +1,10 @@
+// WatchStream.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, Typography, message, Input, Button, List, Space, Tooltip } from "antd";
+import { SendOutlined, CopyOutlined } from "@ant-design/icons";
 import socket from "../../socket";
 import "./WatchStream.css";
-import { SendOutlined, CopyOutlined } from "@ant-design/icons";
 
 const { Title, Paragraph } = Typography;
 
@@ -11,123 +12,148 @@ const WatchStream = () => {
   const { id } = useParams();
   const videoRef = useRef(null);
   const chatEndRef = useRef(null);
-  const [streamInfo, setStreamInfo] = useState(null);
-  const [error, setError] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [messageInput, setMessageInput] = useState("");
   const peerConnectionRef = useRef(null);
 
-  const servers = {
+  const [streamInfo, setStreamInfo] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState("");
+  const [error, setError] = useState("");
+
+  const ICE_SERVERS = {
     iceServers: [
-      { urls: "stun:global.xirsys.net" },
+      { urls: "stun:stun.l.google.com:19302" }, // Public STUN
       {
         urls: "turn:global.xirsys.net:3478?transport=udp",
-        username: "Manikanta",
-        credential: "786edebc-19dc-11f0-8c4a-0242ac130003",
+        username: "Mani",
+        credential: "71742688-1f41-11f0-8c62-0242ac130003",
       },
       {
         urls: "turn:global.xirsys.net:3478?transport=tcp",
-        username: "Manikanta",
-        credential: "786edebc-19dc-11f0-8c4a-0242ac130003",
+        username: "Mani",
+        credential: "71742688-1f41-11f0-8c62-0242ac130003",
       },
     ],
   };
+
+  useEffect(() => {
+    socket.on("connect", () => console.log("✅ Socket connected:", socket.id));
+    socket.on("connect_error", (err) => console.error("❌ Socket error:", err));
+
+    return () => {
+      socket.off("connect");
+      socket.off("connect_error");
+    };
+  }, []);
+
+  useEffect(() => {
+    setupPeerConnection(); // Setup BEFORE listening to offer
+
+    socket.on("offer", async ({ offer }) => {
+      console.log("📡 Received offer:", offer);
+      if (!peerConnectionRef.current) setupPeerConnection();
+
+      try {
+        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await peerConnectionRef.current.createAnswer();
+        await peerConnectionRef.current.setLocalDescription(answer);
+        socket.emit("answer", { streamId: id, answer });
+        console.log("✅ Sent answer");
+      } catch (err) {
+        console.error("❌ Error during WebRTC negotiation:", err);
+      }
+    });
+
+    return () => socket.off("offer");
+  }, [id]);
 
   useEffect(() => {
     socket.emit("join-stream", { streamId: id });
     socket.emit("get-stream-info", { streamId: id });
 
     socket.on("stream-info", (data) => {
-      if (data) {
-        setStreamInfo(data);
-        message.success(`Joined stream: ${data.streamTitle}`);
-        setupPeerConnection();
-      } else {
-        setError("Stream not found or ended.");
+      if (!data) {
+        setError("Stream not found or has ended.");
+        return;
       }
+      setStreamInfo(data);
+      message.success(`Joined: ${data.streamTitle}`);
+      console.log("ℹ️ Stream info:", data);
+    });
+
+    socket.on("stop-stream", () => {
+      setError("The stream has been stopped by the streamer.");
+      cleanupStream();
     });
 
     socket.on("stream-ended", () => {
       setError("The stream has ended.");
-      if (videoRef.current) videoRef.current.srcObject = null;
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-        peerConnectionRef.current = null;
-      }
+      cleanupStream();
     });
 
     return () => {
+      socket.emit("leave-stream", { streamId: id });
+
       socket.off("stream-info");
+      socket.off("stop-stream");
       socket.off("stream-ended");
-      socket.off("offer");
       socket.off("ice-candidate");
       socket.off("chat-message");
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-        peerConnectionRef.current = null;
-      }
+
+      cleanupStream();
     };
   }, [id]);
 
+  const cleanupStream = () => {
+    if (videoRef.current) videoRef.current.srcObject = null;
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
+  };
+
   const setupPeerConnection = () => {
-    console.log("VIEWER: Setting up PeerConnection for streamId:", id);
-    peerConnectionRef.current = new RTCPeerConnection(servers);
+    if (peerConnectionRef.current) return;
+
+    peerConnectionRef.current = new RTCPeerConnection(ICE_SERVERS);
+
+    peerConnectionRef.current.onicecandidate = (e) => {
+      if (e.candidate) {
+        socket.emit("ice-candidate", { streamId: id, candidate: e.candidate });
+        console.log("📨 Sent ICE candidate");
+      }
+    };
 
     peerConnectionRef.current.oniceconnectionstatechange = () => {
-      console.log("ICE connection state:", peerConnectionRef.current.iceConnectionState);
+      console.log("🧊 ICE state:", peerConnectionRef.current.iceConnectionState);
     };
 
     peerConnectionRef.current.onconnectionstatechange = () => {
-      console.log("Overall connection state:", peerConnectionRef.current.connectionState);
+      console.log("🔗 Connection state:", peerConnectionRef.current.connectionState);
+      if (peerConnectionRef.current.connectionState === "connected") {
+        console.log("✅ WebRTC connection established!");
+      }
     };
 
     peerConnectionRef.current.ontrack = (event) => {
-      console.log("Received track:", event.streams[0]);
-      if (videoRef.current) {
+      console.log("📺 Track received:", event.streams);
+      if (event.streams && event.streams[0]) {
         videoRef.current.srcObject = event.streams[0];
       }
     };
 
-    peerConnectionRef.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        console.log("VIEWER: Sending ICE candidate:", event.candidate);
-        socket.emit("ice-candidate", {
-          streamId: id,
-          candidate: event.candidate,
-        });
-      }
-    };
-
-    socket.on("offer", async ({ offer }) => {
-      console.log("VIEWER: Received offer:", offer);
-      try {
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await peerConnectionRef.current.createAnswer();
-        await peerConnectionRef.current.setLocalDescription(answer);
-        console.log("VIEWER: Sending answer");
-        socket.emit("answer", { streamId: id, answer });
-      } catch (err) {
-        console.error("VIEWER: Failed to process offer:", err);
-      }
-    });
-
     socket.on("ice-candidate", async ({ candidate }) => {
-      console.log("VIEWER: Received ICE candidate:", candidate);
       try {
-        if (candidate) {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        }
+        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log("📥 Received ICE candidate");
       } catch (err) {
-        console.error("VIEWER: Failed to add ICE candidate:", err);
+        console.error("❌ Failed to add ICE candidate:", err);
       }
     });
   };
 
   useEffect(() => {
     socket.on("chat-message", (msg) => setMessages((prev) => [...prev, msg]));
-    return () => {
-      socket.off("chat-message");
-    };
+    return () => socket.off("chat-message");
   }, []);
 
   useEffect(() => {
@@ -135,24 +161,22 @@ const WatchStream = () => {
   }, [messages]);
 
   const sendMessage = () => {
-    if (messageInput.trim()) {
-      const chatData = {
-        streamId: id,
-        userId: "Viewer",
-        username: "Viewer",
-        message: messageInput,
-        time: new Date().toLocaleTimeString(),
-      };
-      socket.emit("chat-message", chatData);
-      setMessageInput("");
-    }
+    if (!messageInput.trim()) return;
+
+    socket.emit("chat-message", {
+      streamId: id,
+      userId: "Viewer",
+      username: "Viewer",
+      message: messageInput,
+      time: new Date().toLocaleTimeString(),
+    });
+
+    setMessageInput("");
   };
 
   const handleCopyLink = () => {
-    const fullLink = `${window.location.origin}/livestreamingplatform/watch/${id}`;
-    navigator.clipboard.writeText(fullLink).then(() => {
-      message.success("Stream link copied to clipboard!");
-    });
+    const link = `${window.location.origin}/livestreamingplatform/watch/${id}`;
+    navigator.clipboard.writeText(link).then(() => message.success("Copied link!"));
   };
 
   return (
@@ -181,9 +205,7 @@ const WatchStream = () => {
             style={{ width: "100%", backgroundColor: "#000" }}
           />
           <Card className="watch-chat-box" style={{ marginTop: 20 }}>
-            <Title level={4} className="chat-title">
-              Live Chat
-            </Title>
+            <Title level={4} className="chat-title">Live Chat</Title>
             <List
               className="chat-messages"
               dataSource={messages}

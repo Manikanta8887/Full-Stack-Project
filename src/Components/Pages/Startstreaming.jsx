@@ -1,7 +1,10 @@
+// StartStreaming.jsx
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setIsStreaming, setStreamTitle } from "../Redux/streamSlice.js";
-import { Button, Card, Space, message, Typography, Input, Row, Col, List } from "antd";
+import {
+  Button, Card, Space, message, Typography, Input, Row, Col, List
+} from "antd";
 import {
   VideoCameraOutlined,
   StopOutlined,
@@ -21,19 +24,18 @@ const { Title } = Typography;
 
 const StartStreaming = () => {
   const dispatch = useDispatch();
-  const firebaseUser = useSelector((state) => state.user.firebaseUser);
-  const reduxStreaming = useSelector((state) => state.stream.isStreaming);
-  const reduxTitle = useSelector((state) => state.stream.streamTitle);
-
+  const firebaseUser = useSelector((s) => s.user.firebaseUser);
+  const reduxStreaming = useSelector((s) => s.stream.isStreaming);
+  const reduxTitle = useSelector((s) => s.stream.streamTitle);
   const isStreaming = reduxStreaming || localStorage.getItem("isStreaming") === "true";
   const streamTitle = reduxTitle || localStorage.getItem("streamTitle") || "";
 
   const videoRef = useRef(null);
   const chatEndRef = useRef(null);
+  const peerConnectionRef = useRef(null);
 
   const [stream, setStream] = useState(null);
-  const [originalVideoTrack, setOriginalVideoTrack] = useState(null);
-  const [error, setError] = useState("");
+  const [origVideoTrack, setOrigVideoTrack] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -42,17 +44,20 @@ const StartStreaming = () => {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const peerConnectionRef = useRef(null);
-  const servers = {
+  const ICE_SERVERS = {
     iceServers: [
-      {
-        urls: "stun:global.xirsys.net",
-      },
+      { urls: "stun:global.xirsys.net:3478" },
       {
         urls: "turn:global.xirsys.net:3478?transport=udp",
-        username: "Manikanta",
-        credential: "786edebc-19dc-11f0-8c4a-0242ac130003",
+        username: "Mani",
+        credential: "71742688-1f41-11f0-8c62-0242ac130003",
+      },
+      {
+        urls: "turn:global.xirsys.net:3478?transport=tcp",
+        username: "Mani",
+        credential: "71742688-1f41-11f0-8c62-0242ac130003",
       },
     ],
   };
@@ -68,31 +73,66 @@ const StartStreaming = () => {
   }, [reduxTitle]);
 
   useEffect(() => {
-    socket.on("chat-message", (msg) => setMessages((prev) => [...prev, msg]));
+    // signaling listeners
+    socket.on("chat-message", (msg) => {
+      console.log("[Socket] chat-message received:", msg);
+      setMessages((prev) => [...prev, msg]);
+    });
+
     socket.on("answer", async ({ answer }) => {
-      console.log("STREAMER: Received answer", answer);
+      console.log("[Socket] answer received:", answer);
       await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(answer));
     });
+
     socket.on("ice-candidate", async ({ candidate }) => {
+      console.log("[Socket] ice-candidate received:", candidate);
       try {
         await peerConnectionRef.current?.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log("[ICE] Connection state:", peerConnectionRef.current.iceConnectionState);
       } catch (e) {
-        console.error("Error adding ICE candidate:", e);
+        console.error("Failed to add ICE candidate", e);
       }
     });
+
     socket.on("update-streams", (streams) => {
-      const myStream = streams.find((s) => s.streamerId === firebaseUser?.uid);
-      if (myStream) {
-        setViewerCount(myStream.viewers || 0);
+      console.log("[Socket] update-streams:", streams);
+      const mine = streams.find((s) => s.streamerId === firebaseUser?.uid);
+      setViewerCount(mine?.viewers || 0);
+    });
+
+    socket.on("viewer-joined", async ({ streamId }) => {
+      if (peerConnectionRef.current && streamId === firebaseUser.uid) {
+        console.log("[Socket] viewer-joined, creating new offer…");
+        const offer = await peerConnectionRef.current.createOffer();
+        await peerConnectionRef.current.setLocalDescription(offer);
+        socket.emit("offer", { streamId, offer });
       }
     });
-    socket.on("stream-info", (data) => {
-      if (data) {
-        setMessages(data.chatMessages || []);
-        setViewerCount(data.viewers || 0);
+
+    socket.on("request-offer", async ({ streamId }) => {
+      if (peerConnectionRef.current && streamId === firebaseUser.uid) {
+        console.log("[Socket] request-offer, sending new offer");
+        const offer = await peerConnectionRef.current.createOffer();
+        await peerConnectionRef.current.setLocalDescription(offer);
+        socket.emit("offer", { streamId, offer });
       }
     });
+    
+    
+
+    socket.on("stream-info", async (data) => {
+      console.log("[Socket] stream-info:", data);
+      if (!data) return;
+      setMessages(data.chatMessages || []);
+      setViewerCount(data.viewers || 0);
+      if (isStreaming && peerConnectionRef.current) {
+        const offer = await peerConnectionRef.current.createOffer();
+        console.log("[WebRTC] re-offer created on stream-info:", offer);
+        await peerConnectionRef.current.setLocalDescription(offer);
+        socket.emit("offer", { streamId: firebaseUser?.uid, offer });
+        console.log("[Socket] offer re-emitted on stream-info:", offer);
+      }
+    });
+
     return () => {
       socket.off("chat-message");
       socket.off("answer");
@@ -100,52 +140,65 @@ const StartStreaming = () => {
       socket.off("update-streams");
       socket.off("stream-info");
     };
-  }, [firebaseUser]);
+  }, [firebaseUser, isStreaming]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    const rejoinStream = async () => {
+    const rejoin = async () => {
+      console.log("[WebRTC] rejoin-stream invoked for:", firebaseUser?.uid);
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        console.log("[Media] obtained userMedia for rejoin");
         videoRef.current.srcObject = mediaStream;
         setStream(mediaStream);
-        setOriginalVideoTrack(mediaStream.getVideoTracks()[0]);
-        peerConnectionRef.current = new RTCPeerConnection(servers);
-        mediaStream.getTracks().forEach((track) => {
-          peerConnectionRef.current.addTrack(track, mediaStream);
-        });
-        peerConnectionRef.current.onicecandidate = (event) => {
-          if (event.candidate) {
+        setOrigVideoTrack(mediaStream.getVideoTracks()[0]);
+
+        peerConnectionRef.current = new RTCPeerConnection(ICE_SERVERS);
+        console.log("[WebRTC] RTCPeerConnection created for rejoin:", peerConnectionRef.current);
+
+        // log connection state changes
+        peerConnectionRef.current.onconnectionstatechange = () => {
+          console.log("[WebRTC] connectionState (rejoin):", peerConnectionRef.current.connectionState);
+        };
+
+        peerConnectionRef.current.ontrack = (e) => {
+          console.log("[WebRTC] track event (rejoin):", e);
+          videoRef.current.srcObject = e.streams[0];
+        };
+
+        mediaStream.getTracks().forEach((t) => peerConnectionRef.current.addTrack(t, mediaStream));
+        peerConnectionRef.current.onicecandidate = (e) => {
+          if (e.candidate) {
+            console.log("[WebRTC] sending ICE candidate (rejoin):", e.candidate);
             socket.emit("ice-candidate", {
               streamId: firebaseUser?.uid,
-              candidate: event.candidate,
+              candidate: e.candidate,
             });
           }
         };
+
         socket.emit("rejoin-stream", { streamerId: firebaseUser?.uid });
-        message.success("Rejoined the stream after refresh.");
+        console.log("[Socket] rejoin-stream emitted for:", firebaseUser?.uid);
+        message.success("Rejoined stream");
       } catch (err) {
-        console.error("Rejoin error:", err);
-        message.error("Failed to rejoin stream after refresh.");
+        console.error("Rejoin failed", err);
+        message.error("Failed to rejoin stream");
       }
     };
 
     if (isStreaming && !peerConnectionRef.current) {
       dispatch(setIsStreaming(true));
       dispatch(setStreamTitle(streamTitle));
-      rejoinStream();
+      rejoin();
     }
-  }, [isStreaming, streamTitle, dispatch, firebaseUser, servers]);
+  }, [isStreaming, streamTitle, dispatch, firebaseUser]);
 
   const toggleFullScreen = () => {
-    if (!isFullScreen && videoRef.current) {
-      videoRef.current.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
+    if (!isFullScreen && videoRef.current) videoRef.current.requestFullscreen();
+    else document.exitFullscreen();
     setIsFullScreen((prev) => !prev);
   };
 
@@ -166,95 +219,110 @@ const StartStreaming = () => {
   const toggleScreenShare = async () => {
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      console.log("[Media] obtained displayMedia for screen share");
       const screenTrack = screenStream.getVideoTracks()[0];
       const sender = peerConnectionRef.current?.getSenders().find((s) => s.track.kind === "video");
       if (!sender) return;
-      if (!originalVideoTrack) {
-        setOriginalVideoTrack(stream.getVideoTracks()[0]);
-      }
+      if (!origVideoTrack) setOrigVideoTrack(stream.getVideoTracks()[0]);
+
+      console.log("[WebRTC] replacing video track with screen track");
       sender.replaceTrack(screenTrack);
       videoRef.current.srcObject = new MediaStream([screenTrack, ...stream.getAudioTracks()]);
       setIsScreenSharing(true);
       message.success("Screen sharing started");
+
       screenTrack.onended = () => {
-        if (originalVideoTrack) {
-          sender.replaceTrack(originalVideoTrack);
-          videoRef.current.srcObject = stream;
-        }
+        console.log("[Media] screen sharing ended, restoring original track");
+        sender.replaceTrack(origVideoTrack);
+        videoRef.current.srcObject = stream;
         setIsScreenSharing(false);
       };
     } catch (err) {
-      console.error("Error sharing screen:", err);
-      message.error("Screen sharing failed");
+      console.error("Screen share error:", err);
+      message.error("Failed to share screen");
     }
   };
 
   const startStream = async () => {
-    if (!streamTitle.trim()) {
-      return message.warning("Please enter a stream title.");
-    }
+    if (!streamTitle.trim()) return message.warning("Enter a stream title");
+    console.log("[Action] startStream clicked with title:", streamTitle);
     try {
       setIsLoading(true);
       const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      console.log("[Media] obtained userMedia for startStream");
       videoRef.current.srcObject = mediaStream;
       setStream(mediaStream);
-      setOriginalVideoTrack(mediaStream.getVideoTracks()[0]);
+      setOrigVideoTrack(mediaStream.getVideoTracks()[0]);
       dispatch(setIsStreaming(true));
       dispatch(setStreamTitle(streamTitle));
       message.success("Streaming started");
 
-      peerConnectionRef.current = new RTCPeerConnection(servers);
-      mediaStream.getTracks().forEach((track) => {
-        peerConnectionRef.current.addTrack(track, mediaStream);
-      });
+      peerConnectionRef.current = new RTCPeerConnection(ICE_SERVERS);
+      console.log("[WebRTC] RTCPeerConnection created for startStream:", peerConnectionRef.current);
 
-      peerConnectionRef.current.onicecandidate = (event) => {
-        if (event.candidate) {
+      // log connection state changes
+      peerConnectionRef.current.onconnectionstatechange = () => {
+        console.log("[WebRTC] connectionState (start):", peerConnectionRef.current.connectionState);
+      };
+
+      peerConnectionRef.current.ontrack = (e) => {
+        console.log("[WebRTC] track event (start):", e);
+        videoRef.current.srcObject = e.streams[0];
+      };
+
+      mediaStream.getTracks().forEach((t) => peerConnectionRef.current.addTrack(t, mediaStream));
+      peerConnectionRef.current.onicecandidate = (e) => {
+        if (e.candidate) {
+          console.log("[WebRTC] sending ICE candidate (start):", e.candidate);
           socket.emit("ice-candidate", {
             streamId: firebaseUser?.uid || "Guest",
-            candidate: event.candidate,
+            candidate: e.candidate,
           });
         }
       };
 
       const offer = await peerConnectionRef.current.createOffer();
+      console.log("[WebRTC] offer created:", offer);
       await peerConnectionRef.current.setLocalDescription(offer);
+      console.log("[WebRTC] local description set:", peerConnectionRef.current.localDescription);
 
-      console.log("STREAMER: Emitting offer with streamId:", firebaseUser?.uid);
       socket.emit("offer", { streamId: firebaseUser?.uid || "Guest", offer });
+      console.log("[Socket] offer emitted:", offer);
+
       socket.emit("start-stream", {
         streamTitle,
         streamerId: firebaseUser?.uid || "Guest",
         streamerName: firebaseUser?.displayName || "Guest",
         profilePic: firebaseUser?.photoURL || null,
       });
+      console.log("[Socket] start-stream emitted for:", firebaseUser?.uid || "Guest");
     } catch (err) {
-      console.error("Stream start error:", err);
-      setError("Failed to access camera/mic.");
-      message.error("Permission denied or no camera/mic available.");
+      console.error("Start stream error:", err);
+      message.error("Unable to start stream (camera/mic permission?)");
     } finally {
       setIsLoading(false);
     }
   };
+
   const stopStream = () => {
-    stream?.getTracks().forEach((track) => track.stop());
+    console.log("[Action] stopStream clicked");
+    stream?.getTracks().forEach((t) => t.stop());
     peerConnectionRef.current?.close();
     peerConnectionRef.current = null;
-    setStream(null);
-    setOriginalVideoTrack(null);
     dispatch(setIsStreaming(false));
     dispatch(setStreamTitle(""));
     localStorage.removeItem("isStreaming");
     localStorage.removeItem("streamTitle");
+    setStream(null);
+    setOrigVideoTrack(null);
     setIsCameraOn(true);
     setIsMuted(false);
     setIsScreenSharing(false);
     setViewerCount(0);
     if (videoRef.current) videoRef.current.srcObject = null;
-    message.info("Streaming stopped");
-    socket.emit("stop-stream", {
-      streamerId: firebaseUser?.uid || "Guest",
-    });
+    socket.emit("stop-stream", { streamerId: firebaseUser?.uid || "Guest" });
+    console.log("[Socket] stop-stream emitted for:", firebaseUser?.uid || "Guest");
+    message.info("Stream stopped");
   };
 
   const sendMessage = useCallback(() => {
@@ -266,6 +334,7 @@ const StartStreaming = () => {
         message: messageInput,
         time: new Date().toLocaleTimeString(),
       };
+      console.log("[Socket] sending chat-message:", chatData);
       socket.emit("chat-message", chatData);
       setMessageInput("");
     }
@@ -274,8 +343,8 @@ const StartStreaming = () => {
   return (
     <Row justify="center" gutter={[16, 16]} className="start-streaming-container">
       <Col xs={24} md={16}>
-        <Card bordered className="stream-card">
-          <Title level={3} className="stream-title">
+        <Card className="stream-card">
+          <Title level={3}>
             Start Live Streaming {isStreaming && `• ${viewerCount} watching`}
           </Title>
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
@@ -302,7 +371,12 @@ const StartStreaming = () => {
                   Start Streaming
                 </Button>
               ) : (
-                <Button type="danger" icon={<StopOutlined />} size="large" onClick={stopStream}>
+                <Button
+                  type="danger"
+                  icon={<StopOutlined />}
+                  size="large"
+                  onClick={stopStream}
+                >
                   Stop Streaming
                 </Button>
               )}
@@ -318,45 +392,33 @@ const StartStreaming = () => {
                 <Button onClick={toggleCamera}>
                   {isCameraOn ? <CameraOnIcon /> : <CameraOffIcon />}
                 </Button>
-                <Button onClick={toggleScreenShare} icon={<DesktopOutlined />}>
-                  Share Screen
-                </Button>
+                <Button onClick={toggleScreenShare} icon={<DesktopOutlined />} />
               </Space>
+            )}
+            {isStreaming && (
+              <>
+                <List
+                  bordered
+                  dataSource={messages}
+                  className="chat-box"
+                  renderItem={(item) => (
+                    <List.Item>
+                      <strong>{item.username}</strong>: {item.message}
+                    </List.Item>
+                  )}
+                />
+                <div ref={chatEndRef} />
+                <Input.Search
+                  placeholder="Type a message..."
+                  enterButton={<SendOutlined />}
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onSearch={sendMessage}
+                />
+              </>
             )}
           </Space>
         </Card>
-      </Col>
-      <Col xs={24} md={8}>
-        {isStreaming && (
-          <Card className="chat-box">
-            <Title level={4} className="chat-title">
-              Live Chat
-            </Title>
-            <List
-              className="chat-messages"
-              dataSource={messages}
-              renderItem={(msg, index) => (
-                <List.Item key={index}>
-                  <strong>{msg.username}</strong>: {msg.message}
-                  <em style={{ fontSize: "0.8em", color: "#999", marginLeft: "5px" }}>
-                    {msg.time}
-                  </em>
-                </List.Item>
-              )}
-            />
-            <div ref={chatEndRef}></div>
-            <Space.Compact className="chat-input" style={{ marginTop: "8px" }}>
-              <Input
-                placeholder="Type a message..."
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                onPressEnter={sendMessage}
-                autoComplete="off"
-              />
-              <Button type="primary" icon={<SendOutlined />} onClick={sendMessage} />
-            </Space.Compact>
-          </Card>
-        )}
       </Col>
     </Row>
   );
