@@ -1,4 +1,3 @@
-// WatchStream.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, Typography, message, Input, Button, List, Space, Tooltip } from "antd";
@@ -21,7 +20,7 @@ const WatchStream = () => {
 
   const ICE_SERVERS = {
     iceServers: [
-      { urls: "stun:stun.l.google.com:19302" }, // Public STUN
+      { urls: "stun:stun.l.google.com:19302" },
       {
         urls: "turn:global.xirsys.net:3478?transport=udp",
         username: "Mani",
@@ -35,40 +34,64 @@ const WatchStream = () => {
     ],
   };
 
-  useEffect(() => {
-    socket.on("connect", () => console.log("✅ Socket connected:", socket.id));
-    socket.on("connect_error", (err) => console.error("❌ Socket error:", err));
+  const setupPeerConnection = (streamerSocketId) => {
+    if (peerConnectionRef.current) return;
 
-    return () => {
-      socket.off("connect");
-      socket.off("connect_error");
+    const pc = new RTCPeerConnection(ICE_SERVERS);
+    peerConnectionRef.current = pc;
+
+    pc.onicecandidate = (e) => {
+      if (e.candidate && streamerSocketId) {
+        console.log("[WebRTC] sending ICE to streamer:", e.candidate);
+        socket.emit("ice-candidate", {
+          streamId: id,
+          candidate: e.candidate,
+          target: streamerSocketId,
+        });
+      } else {
+        console.warn("[WebRTC] ICE candidate not sent; no streamerSocketId");
+      }
     };
-  }, []);
 
-  useEffect(() => {
-    setupPeerConnection(); // Setup BEFORE listening to offer
+    pc.ontrack = (event) => {
+      console.log("[WebRTC] track received:", event.streams);
+      if (event.streams[0] && videoRef.current) {
+        videoRef.current.srcObject = event.streams[0];
+      }
+    };
 
-    socket.on("offer", async ({ offer }) => {
-      console.log("📡 Received offer:", offer);
-      if (!peerConnectionRef.current) setupPeerConnection();
+    pc.onconnectionstatechange = () => {
+      console.log("[WebRTC] connectionState:", pc.connectionState);
+    };
 
+    socket.on("offer", async ({ offer, from }) => {
+      console.log("[Socket] offer from streamer:", offer);
       try {
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await peerConnectionRef.current.createAnswer();
-        await peerConnectionRef.current.setLocalDescription(answer);
-        socket.emit("answer", { streamId: id, answer });
-        console.log("✅ Sent answer");
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await pc.createAnswer();
+        if (pc.signalingState === "have-remote-offer") {
+          await pc.setLocalDescription(answer);
+          console.log("[WebRTC] created & set local answer:", answer);
+          socket.emit("answer", { streamId: id, answer, target: from });
+        }
       } catch (err) {
-        console.error("❌ Error during WebRTC negotiation:", err);
+        console.error("[WebRTC] error handling offer:", err);
       }
     });
 
-    return () => socket.off("offer");
-  }, [id]);
+    socket.on("ice-candidate", async ({ candidate }) => {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log("[WebRTC] added ICE from streamer:", candidate);
+      } catch (e) {
+        console.error("[WebRTC] addIceCandidate failed:", e);
+      }
+    });
+  };
 
   useEffect(() => {
     socket.emit("join-stream", { streamId: id });
-    socket.emit("get-stream-info", { streamId: id });
+    console.log("[Socket] join-stream emitted:", id);
 
     socket.on("stream-info", (data) => {
       if (!data) {
@@ -76,12 +99,13 @@ const WatchStream = () => {
         return;
       }
       setStreamInfo(data);
-      message.success(`Joined: ${data.streamTitle}`);
-      console.log("ℹ️ Stream info:", data);
+      message.success(`Joined stream: ${data.streamTitle}`);
+      console.log("[Socket] received stream-info:", data);
+      setupPeerConnection(data.streamerSocketId);
     });
 
     socket.on("stop-stream", () => {
-      setError("The stream has been stopped by the streamer.");
+      setError("The stream has been stopped.");
       cleanupStream();
     });
 
@@ -92,13 +116,11 @@ const WatchStream = () => {
 
     return () => {
       socket.emit("leave-stream", { streamId: id });
-
       socket.off("stream-info");
       socket.off("stop-stream");
       socket.off("stream-ended");
+      socket.off("offer");
       socket.off("ice-candidate");
-      socket.off("chat-message");
-
       cleanupStream();
     };
   }, [id]);
@@ -111,48 +133,11 @@ const WatchStream = () => {
     }
   };
 
-  const setupPeerConnection = () => {
-    if (peerConnectionRef.current) return;
-
-    peerConnectionRef.current = new RTCPeerConnection(ICE_SERVERS);
-
-    peerConnectionRef.current.onicecandidate = (e) => {
-      if (e.candidate) {
-        socket.emit("ice-candidate", { streamId: id, candidate: e.candidate });
-        console.log("📨 Sent ICE candidate");
-      }
-    };
-
-    peerConnectionRef.current.oniceconnectionstatechange = () => {
-      console.log("🧊 ICE state:", peerConnectionRef.current.iceConnectionState);
-    };
-
-    peerConnectionRef.current.onconnectionstatechange = () => {
-      console.log("🔗 Connection state:", peerConnectionRef.current.connectionState);
-      if (peerConnectionRef.current.connectionState === "connected") {
-        console.log("✅ WebRTC connection established!");
-      }
-    };
-
-    peerConnectionRef.current.ontrack = (event) => {
-      console.log("📺 Track received:", event.streams);
-      if (event.streams && event.streams[0]) {
-        videoRef.current.srcObject = event.streams[0];
-      }
-    };
-
-    socket.on("ice-candidate", async ({ candidate }) => {
-      try {
-        await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log("📥 Received ICE candidate");
-      } catch (err) {
-        console.error("❌ Failed to add ICE candidate:", err);
-      }
-    });
-  };
-
   useEffect(() => {
-    socket.on("chat-message", (msg) => setMessages((prev) => [...prev, msg]));
+    socket.on("chat-message", (msg) => {
+      console.log("[Socket] chat-message:", msg);
+      setMessages((prev) => [...prev, msg]);
+    });
     return () => socket.off("chat-message");
   }, []);
 
@@ -162,7 +147,6 @@ const WatchStream = () => {
 
   const sendMessage = () => {
     if (!messageInput.trim()) return;
-
     socket.emit("chat-message", {
       streamId: id,
       userId: "Viewer",
@@ -170,7 +154,6 @@ const WatchStream = () => {
       message: messageInput,
       time: new Date().toLocaleTimeString(),
     });
-
     setMessageInput("");
   };
 
@@ -186,10 +169,13 @@ const WatchStream = () => {
           <Title level={3}>{streamInfo.streamTitle}</Title>
           <div style={{ marginBottom: 10 }}>
             <Paragraph
-              copyable={{ text: `${window.location.origin}/livestreamingplatform/watch/${id}` }}
+              copyable={{
+                text: `${window.location.origin}/livestreamingplatform/watch/${id}`,
+              }}
               style={{ marginBottom: 4 }}
             >
-              <strong>🔗 Share Stream:</strong> {`${window.location.origin}/livestreamingplatform/watch/${id}`}
+              <strong>🔗 Share Stream:</strong>{" "}
+              {`${window.location.origin}/livestreamingplatform/watch/${id}`}
             </Paragraph>
             <Tooltip title="Copy full stream link">
               <Button size="small" icon={<CopyOutlined />} onClick={handleCopyLink}>
@@ -205,18 +191,22 @@ const WatchStream = () => {
             style={{ width: "100%", backgroundColor: "#000" }}
           />
           <Card className="watch-chat-box" style={{ marginTop: 20 }}>
-            <Title level={4} className="chat-title">Live Chat</Title>
+            <Title level={4} className="chat-title">
+              Live Chat
+            </Title>
             <List
               className="chat-messages"
               dataSource={messages}
-              renderItem={(msg, index) => (
-                <List.Item key={index}>
-                  <strong>{msg.username}</strong>: {msg.message}
-                  <em style={{ fontSize: "0.8em", color: "#999", marginLeft: "5px" }}>{msg.time}</em>
+              renderItem={(msg, i) => (
+                <List.Item key={i}>
+                  <strong>{msg.username}</strong>: {msg.message}{" "}
+                  <em style={{ fontSize: "0.8em", color: "#999", marginLeft: 5 }}>
+                    {msg.time}
+                  </em>
                 </List.Item>
               )}
             />
-            <div ref={chatEndRef}></div>
+            <div ref={chatEndRef} />
             <Space.Compact className="chat-input">
               <Input
                 placeholder="Type a message..."
@@ -231,7 +221,7 @@ const WatchStream = () => {
         </>
       ) : (
         <>
-          <Title level={4}>Loading stream...</Title>
+          <Title level={4}>Loading stream…</Title>
           {error && <p style={{ color: "red" }}>{error}</p>}
         </>
       )}
@@ -240,3 +230,5 @@ const WatchStream = () => {
 };
 
 export default WatchStream;
+
+
