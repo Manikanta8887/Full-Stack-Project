@@ -56,21 +56,43 @@ const StartStreaming = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // const ICE_SERVERS = {
+  //   iceServers: [
+  //     { urls: "stun:global.xirsys.net:3478" },
+  //     {
+  //       urls: "turn:global.xirsys.net:3478?transport=udp",
+  //       username: "Mani",
+  //       credential: "71742688-1f41-11f0-8c62-0242ac130003",
+  //     },
+  //     {
+  //       urls: "turn:global.xirsys.net:3478?transport=tcp",
+  //       username: "Mani",
+  //       credential: "71742688-1f41-11f0-8c62-0242ac130003",
+  //     },
+  //   ],
+  // };
   const ICE_SERVERS = {
-    iceServers: [
-      { urls: "stun:global.xirsys.net:3478" },
-      {
-        urls: "turn:global.xirsys.net:3478?transport=udp",
-        username: "Mani",
-        credential: "71742688-1f41-11f0-8c62-0242ac130003",
-      },
-      {
-        urls: "turn:global.xirsys.net:3478?transport=tcp",
-        username: "Mani",
-        credential: "71742688-1f41-11f0-8c62-0242ac130003",
-      },
-    ],
-  };
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },         // Google STUN
+    { urls: "stun:global.xirsys.net:3478" },         // XirSys STUN
+    {                                                // XirSys TURN (UDP)
+      urls: "turn:global.xirsys.net:3478?transport=udp",
+      username: "Mani",
+      credential: "71742688-1f41-11f0-8c62-0242ac130003",
+    },
+    {                                                // XirSys TURN (TCP)
+      urls: "turn:global.xirsys.net:3478?transport=tcp",
+      username: "Mani",
+      credential: "71742688-1f41-11f0-8c62-0242ac130003",
+    },
+    {                                                // Secure TURN
+      urls: "turns:global.xirsys.net:443?transport=tcp",
+      username: "Mani",
+      credential: "71742688-1f41-11f0-8c62-0242ac130003",
+    },
+  ],
+};
+
 
   useEffect(() => {
     if (reduxStreaming) localStorage.setItem("isStreaming", "true");
@@ -121,6 +143,11 @@ const StartStreaming = () => {
       console.log(`[Socket] viewer-joined: ${viewerId}. Creating PC…`);
 
       const pc = new RTCPeerConnection(ICE_SERVERS);
+      pc.onicegatheringstatechange = () =>
+        console.log("[WebRTC] gathering state:", pc.iceGatheringState);
+      pc.oniceconnectionstatechange = () =>
+        console.log("[WebRTC] ICE connection state:", pc.iceConnectionState);
+      
 
       pc.onconnectionstatechange = () => {
         console.log(
@@ -182,6 +209,12 @@ const StartStreaming = () => {
         setOrigVideoTrack(mediaStream.getVideoTracks()[0]);
 
         peerConnectionRef.current = new RTCPeerConnection(ICE_SERVERS);
+        peerConnectionRef.current = pc
+        pc.onicegatheringstatechange = () =>
+          console.log("[WebRTC] gathering state:", pc.iceGatheringState);
+        pc.oniceconnectionstatechange = () =>
+          console.log("[WebRTC] ICE connection state:", pc.iceConnectionState);
+        
         console.log(
           "[WebRTC] RTCPeerConnection created for rejoin:",
           peerConnectionRef.current
@@ -321,6 +354,12 @@ const StartStreaming = () => {
       message.success("Streaming started");
 
       peerConnectionRef.current = new RTCPeerConnection(ICE_SERVERS);
+      peerConnectionRef.current = pc 
+      pc.onicegatheringstatechange = () =>
+        console.log("[WebRTC] gathering state:", pc.iceGatheringState);
+      pc.oniceconnectionstatechange = () =>
+        console.log("[WebRTC] ICE connection state:", pc.iceConnectionState);
+      
       console.log(
         "[WebRTC] RTCPeerConnection created for startStream:",
         peerConnectionRef.current
@@ -379,7 +418,7 @@ const StartStreaming = () => {
       setIsLoading(false);
     }
   };
-  
+
   const stopStream = () => {
     console.log("[Action] stopStream clicked");
     stream?.getTracks().forEach((t) => t.stop());

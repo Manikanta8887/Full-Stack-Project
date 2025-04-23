@@ -18,27 +18,55 @@ const WatchStream = () => {
   const [messageInput, setMessageInput] = useState("");
   const [error, setError] = useState("");
 
+  // const ICE_SERVERS = {
+  //   iceServers: [
+  //     { urls: "stun:stun.l.google.com:19302" },
+  //     {
+  //       urls: "turn:global.xirsys.net:3478?transport=udp",
+  //       username: "Mani",
+  //       credential: "71742688-1f41-11f0-8c62-0242ac130003",
+  //     },
+  //     {
+  //       urls: "turn:global.xirsys.net:3478?transport=tcp",
+  //       username: "Mani",
+  //       credential: "71742688-1f41-11f0-8c62-0242ac130003",
+  //     },
+  //   ],
+  // };
+
   const ICE_SERVERS = {
     iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      {
+      { urls: "stun:stun.l.google.com:19302" },         // Google STUN
+      { urls: "stun:global.xirsys.net:3478" },         // XirSys STUN
+      {                                                // XirSys TURN (UDP)
         urls: "turn:global.xirsys.net:3478?transport=udp",
         username: "Mani",
         credential: "71742688-1f41-11f0-8c62-0242ac130003",
       },
-      {
+      {                                                // XirSys TURN (TCP)
         urls: "turn:global.xirsys.net:3478?transport=tcp",
+        username: "Mani",
+        credential: "71742688-1f41-11f0-8c62-0242ac130003",
+      },
+      {                                                // Secure TURN
+        urls: "turns:global.xirsys.net:443?transport=tcp",
         username: "Mani",
         credential: "71742688-1f41-11f0-8c62-0242ac130003",
       },
     ],
   };
+  
 
   const setupPeerConnection = (streamerSocketId) => {
     if (peerConnectionRef.current) return;
 
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnectionRef.current = pc;
+    pc.onicegatheringstatechange = () =>
+      console.log("[WebRTC] gathering state:", pc.iceGatheringState);
+    pc.oniceconnectionstatechange = () =>
+      console.log("[WebRTC] ICE connection state:", pc.iceConnectionState);
+    
 
     pc.onicecandidate = (e) => {
       if (e.candidate && streamerSocketId) {
