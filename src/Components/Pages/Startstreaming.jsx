@@ -143,11 +143,13 @@ const StartStreaming = () => {
       console.log(`[Socket] viewer-joined: ${viewerId}. Creating PC…`);
 
       const pc = new RTCPeerConnection(ICE_SERVERS);
-      pc.onicegatheringstatechange = () =>
-        console.log("[WebRTC] gathering state:", pc.iceGatheringState);
-      pc.oniceconnectionstatechange = () =>
-        console.log("[WebRTC] ICE connection state:", pc.iceConnectionState);
-      
+      {
+        const pc = peerConnectionRef.current;
+        pc.onicegatheringstatechange = () =>
+          console.log("[WebRTC][start] gathering state:", pc.iceGatheringState);
+        pc.oniceconnectionstatechange = () =>
+          console.log("[WebRTC][start] ice state:", pc.iceConnectionState);
+      }
 
       pc.onconnectionstatechange = () => {
         console.log(
@@ -209,12 +211,13 @@ const StartStreaming = () => {
         setOrigVideoTrack(mediaStream.getVideoTracks()[0]);
 
         peerConnectionRef.current = new RTCPeerConnection(ICE_SERVERS);
-        peerConnectionRef.current = pc
-        pc.onicegatheringstatechange = () =>
-          console.log("[WebRTC] gathering state:", pc.iceGatheringState);
-        pc.oniceconnectionstatechange = () =>
-          console.log("[WebRTC] ICE connection state:", pc.iceConnectionState);
-        
+        {
+          const pc = peerConnectionRef.current;
+          pc.onicegatheringstatechange = () =>
+            console.log("[WebRTC][start] gathering state:", pc.iceGatheringState);
+          pc.oniceconnectionstatechange = () =>
+            console.log("[WebRTC][start] ice state:", pc.iceConnectionState);
+        }
         console.log(
           "[WebRTC] RTCPeerConnection created for rejoin:",
           peerConnectionRef.current
@@ -354,12 +357,13 @@ const StartStreaming = () => {
       message.success("Streaming started");
 
       peerConnectionRef.current = new RTCPeerConnection(ICE_SERVERS);
-      peerConnectionRef.current = pc 
-      pc.onicegatheringstatechange = () =>
-        console.log("[WebRTC] gathering state:", pc.iceGatheringState);
-      pc.oniceconnectionstatechange = () =>
-        console.log("[WebRTC] ICE connection state:", pc.iceConnectionState);
-      
+      {
+        const pc = peerConnectionRef.current;
+        pc.onicegatheringstatechange = () =>
+          console.log("[WebRTC][start] gathering state:", pc.iceGatheringState);
+        pc.oniceconnectionstatechange = () =>
+          console.log("[WebRTC][start] ice state:", pc.iceConnectionState);
+      }
       console.log(
         "[WebRTC] RTCPeerConnection created for startStream:",
         peerConnectionRef.current
