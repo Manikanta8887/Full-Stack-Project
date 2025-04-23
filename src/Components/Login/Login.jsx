@@ -287,6 +287,8 @@ import { EyeInvisibleOutlined, EyeTwoTone, SyncOutlined } from "@ant-design/icon
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,     // ← added
+  getRedirectResult,      // ← added
   signInAnonymously,
   sendPasswordResetEmail,
   onAuthStateChanged,
@@ -300,6 +302,12 @@ import { useDispatch } from "react-redux";
 import { setFirebaseUser } from "../Redux/Store";
 import "./Login.css";
 import baseurl from "../../base";
+
+// ← helper to detect mobile devices
+const isMobile = () =>
+  /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+    navigator.userAgent
+  );
 
 const Login = () => {
   const navigate = useNavigate();
@@ -323,6 +331,32 @@ const Login = () => {
         );
       }
     });
+
+    // handle redirect result (for mobile Google login)
+    getRedirectResult(Auth)
+      .then((res) => {
+        if (res && res.user) {
+          const user = res.user;
+          const userData = {
+            uid: user.uid,
+            name: user.displayName,
+            email: user.email,
+            profilePic: user.photoURL,
+          };
+          dispatch(
+            setFirebaseUser({
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+            })
+          );
+          sendUserToBackend(userData, "google");
+        }
+      })
+      .catch((err) => {
+        console.error("Redirect login error:", err);
+      });
   }, [dispatch]);
 
   const handleChange = (e) => {
@@ -336,7 +370,9 @@ const Login = () => {
         withCredentials: true,
       });
       toast.dismiss();
-      toast.success(`${loginType.charAt(0).toUpperCase() + loginType.slice(1)} Login Successful!`);
+      toast.success(
+        `${loginType.charAt(0).toUpperCase() + loginType.slice(1)} Login Successful!`
+      );
       setTimeout(() => navigate("/livestreamingplatform", { replace: true }), 2000);
     } catch (error) {
       console.error("Login Error:", error);
@@ -348,11 +384,13 @@ const Login = () => {
   const handleEmailLogin = (e) => {
     e.preventDefault();
     setLoading({ ...loading, email: true });
+
     if (!userdetails.email || !userdetails.password) {
       toast.error("Please enter both email and password!");
       setLoading({ ...loading, email: false });
       return;
     }
+
     signInWithEmailAndPassword(Auth, userdetails.email, userdetails.password)
       .then((result) => {
         const user = result.user;
@@ -378,31 +416,45 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     setLoading({ ...loading, google: true });
-    signInWithPopup(Auth, GoogleProvider)
+
+    // choose popup on desktop, redirect on mobile
+    const authAction = isMobile()
+      ? signInWithRedirect(Auth, GoogleProvider)
+      : signInWithPopup(Auth, GoogleProvider);
+
+    authAction
       .then((result) => {
-        const user = result.user;
-        const userData = {
-          uid: user.uid,
-          name: user.displayName,
-          email: user.email,
-          profilePic: user.photoURL,
-        };
-        dispatch(
-          setFirebaseUser({
+        // popup mode: result contains user
+        if (result && result.user) {
+          const user = result.user;
+          const userData = {
             uid: user.uid,
+            name: user.displayName,
             email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-          })
-        );
-        sendUserToBackend(userData, "google");
+            profilePic: user.photoURL,
+          };
+          dispatch(
+            setFirebaseUser({
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+            })
+          );
+          sendUserToBackend(userData, "google");
+        }
+        // redirect mode: handled in getRedirectResult
       })
-      .catch(() => toast.error("Google login failed"))
+      .catch((err) => {
+        console.error("Google login error:", err);
+        toast.error("Google login failed");
+      })
       .finally(() => setLoading({ ...loading, google: false }));
   };
 
   const handleGuestLogin = () => {
     setLoading({ ...loading, guest: true });
+
     signInAnonymously(Auth)
       .then((result) => {
         const user = result.user;
