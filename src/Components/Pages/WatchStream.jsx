@@ -321,6 +321,10 @@ const WatchStream = () => {
       }
     };
 
+    pc.onconnectionstatechange = () => {
+      console.log("[WebRTC] connectionState:", pc.connectionState);
+    };
+
     // Handle offer → answer
     socket.on("offer", async ({ offer, from }) => {
       try {
@@ -358,7 +362,7 @@ const WatchStream = () => {
     socket.emit("leave-stream", { streamId: id });
     cleanupStream();
     message.info("Left the stream");
-    navigate("/browse");  // ← adjust to your browse or home route
+    navigate("/livestreamingplatform"); 
   };
 
   useEffect(() => {
