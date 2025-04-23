@@ -452,7 +452,7 @@ const StartStreaming = () => {
       <Col xs={24} md={16}>
         <Card className="stream-card">
           <Title level={3}>
-            Start Live Streaming {isStreaming && `• ${viewerCount} watching`}
+           Live Streaming {isStreaming && `• ${viewerCount} watching`}
           </Title>
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
             <Input
@@ -481,7 +481,7 @@ const StartStreaming = () => {
                   loading={isLoading}
                   disabled={!firebaseUser}
                 >
-                  Start Streaming
+                  Start
                 </Button>
               ) : (
                 <Button
