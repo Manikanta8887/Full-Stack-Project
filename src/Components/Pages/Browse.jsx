@@ -113,13 +113,7 @@ const Browse = () => {
 
   return (
     <div className="browse-container">
-      {/* Live Streams */}
       <Title level={2}>🎥 Live Streams</Title>
-      <Search
-        placeholder="Search streams..."
-        onChange={(e) => setSearchQuery(e.target.value)}
-        style={{ width: 300, marginBottom: 20 }}
-      />
       <Row gutter={[16, 16]}>
         {filteredLive.length === 0 ? (
           <p>No live streams available</p>
@@ -173,7 +167,6 @@ const Browse = () => {
         )}
       </Row>
 
-      {/* Uploaded Videos */}
       <Title level={3} style={{ marginTop: 30 }}>
         📹 Uploaded Videos
       </Title>
