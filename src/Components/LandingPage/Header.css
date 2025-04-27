@@ -1,72 +1,71 @@
 .app-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between; 
   background: #2E073F;
-  padding: 10px 20px;
-  height: 64px;
+  padding: 12px 16px;
   color: white;
 }
 
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .logo-icon {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
 }
 
 .logo-text {
-  font-size: 1.3rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #EBD3F8;
+}
+
+/* Space for buttons */
+.app-header .ant-space {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Button Styles */
+.login-button,
+.signup-button {
+  margin: 0;
+  padding: 0 16px;
 }
 
 .login-button {
   color: white;
   border: 1px solid #EBD3F8;
   background: transparent;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.3s;
 }
-
 .login-button:hover {
-  background: #AD49E1; 
+  background: #AD49E1;
   border-color: #AD49E1;
-  color: #ffffff;
 }
 
 .signup-button {
-  background: #7A1CAC !important;  
-  border: 1px solid #7A1CAC !important;
-  color: #ffffff !important;
-  transition: all 0.3s ease-in-out;
+  background: #7A1CAC;
+  border: 1px solid #7A1CAC;
+  color: white;
+  transition: all 0.3s;
+}
+.signup-button:hover {
+  background: #AD49E1;
+  border-color: #AD49E1;
 }
 
-.signup-button:hover, 
-.signup-button:focus, 
-.signup-button:active {
-  background: #AD49E1 !important; 
-  border-color: #AD49E1 !important;
-  color: #ffffff !important;
-}
-
-
-/*--------------------------------------------------
-  TABLET (≤768px)
---------------------------------------------------*/
-@media (max-width: 768px) {
+/* Tablet (≥768px) */
+@media (min-width: 768px) {
   .app-header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 8px 16px;
-    height: auto;
-  }
-
-  .logo-container {
-    margin-bottom: 8px;
+    padding: 0 20px;
+    height: 64px;
   }
 
   .logo-icon {
@@ -75,39 +74,30 @@
   }
 
   .logo-text {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
   }
 
-  /* make buttons span full width or stack neatly */
-  .login-button,
-  .signup-button {
-    width: 100%;
-    text-align: center;
-    margin-bottom: 6px;
+  .app-header .ant-space {
+    gap: 12px;
   }
 }
 
-/*--------------------------------------------------
-  MOBILE (≤480px)
---------------------------------------------------*/
-@media (max-width: 480px) {
+/* Desktop (≥1024px) */
+@media (min-width: 1024px) {
   .app-header {
-    padding: 6px 12px;
-  }
-
-  /* hide the text if you need more room */
-  .logo-text {
-    display: none;
+    padding: 0 32px;
   }
 
   .logo-icon {
-    width: 28px;
-    height: 28px;
+    width: 40px;
+    height: 40px;
   }
 
-  .login-button,
-  .signup-button {
-    font-size: 0.85rem;
-    padding: 6px 10px;
+  .logo-text {
+    font-size: 1.3rem;
+  }
+
+  .app-header .ant-space {
+    gap: 16px;
   }
 }

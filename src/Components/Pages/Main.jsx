@@ -134,7 +134,7 @@ const LiveStreamingPlatform = () => {
               />
             </Col>
 
-            <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
+            {/* <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
               <Search
                 placeholder="Search streams..."
                 size="large"
@@ -142,7 +142,7 @@ const LiveStreamingPlatform = () => {
                 className="search-input"
                 style={{ width: "100%", maxWidth: "400px" }}
               />
-            </Col>
+            </Col> */}
 
             <Col flex="none">
               <Space size="large">
