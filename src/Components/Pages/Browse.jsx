@@ -34,6 +34,7 @@ const VideoCard = ({ vid }) => {
             src={vid.url}
             className="browse-video-card"
             controls
+            preload="auto"
             autoPlay
             muted
           />
