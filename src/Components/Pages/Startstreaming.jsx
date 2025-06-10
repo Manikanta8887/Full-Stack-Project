@@ -451,9 +451,9 @@ const StartStreaming = () => {
     <Row justify="center" gutter={[16, 16]} className="start-streaming-container">
       <Col xs={24} md={16}>
         <Card className="stream-card">
-          <Title level={3}>
+{/*           <Title level={3}>
            Live Streaming {isStreaming && `• ${viewerCount} watching`}
-          </Title>
+          </Title> */}
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
             <Input
               placeholder="Enter Stream Title"
