@@ -27,7 +27,7 @@ const VideoCard = ({ vid }) => {
     <Card hoverable style={{ height: "100%" }}>
       <div
         className="video-card-cover"
-        onClick={() => setPlaying(true)}
+        onClick={ setPlaying(true)}
       >
         {playing ? (
           <video
